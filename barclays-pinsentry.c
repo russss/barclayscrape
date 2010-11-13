@@ -149,8 +149,6 @@ main (int argc, const char *argv[])
       dump ('<', buflen, buf);
    if (buflen != cmd[4] + 2)
       errx (1, "Did not get right data length %d!=%d", (int) buflen, cmd[4]);
-   if (buflen < 19 || buf[17] != 8 || strncmp ((char *) buf + 18, "BARCLAYS", 8))
-      errx (1, "Not a barclays card");
 
    cmd[0] = 0x80;
    cmd[1] = 0xA8;
