@@ -5,16 +5,18 @@ require 'mechanize'
 # A library to programmatically mainpulate Barclays online banking.
 class BarclayScrape
   LOGIN_ENDPOINT='https://ibank.barclays.co.uk/olb/u/LoginMember.do'
-  EXPORT_ENDPOINT='https://ibank.barclays.co.uk/olb/u/ExportData1.do?action=Export+Bank+Statement||Export+Data&Go=Go'
+  EXPORT_ENDPOINT='https://ibank.barclays.co.uk/olb/v/Redirect.do?go=ExportData1.do%3Faction%3DExport%2BBank%2BStatement||Export%2BData&Go=Go'
 
   # Initialize the class. Requires your surname, online banking membership number,
   # and either :cardnumber and :otp (8-digit one-time password from your PINSentry), or
   # your :pin and a working smartcard reader.
   def initialize(surname, membership_no, params)
     params = {:pinsentry_binary => './barclays-pinsentry'}.merge!(params)
-    if params[:otp] and params[:cardnumber]
-      @otp = params[:otp]
+    if params[:cardnumber]
       @cardnumber = params[:cardnumber]
+    end
+    if params[:otp]
+      @otp = params[:otp]
     elsif params[:pinsentry_binary] and params[:pin]
       @pinsentry_binary = params[:pinsentry_binary]
       @pin = params[:pin]
@@ -51,8 +53,10 @@ class BarclayScrape
   private
 
   def get_pinsentry_data()
-    @cardnumber = `#{@pinsentry_binary} -i`.strip
     @otp = `#{@pinsentry_binary} -p #{@pin} -o`.strip
+    if not @cardnumber
+      @cardnumber = `#{@pinsentry_binary} -i`.strip
+    end
     @logger.debug("Card: #{@cardnumber} OTP: #{@otp}") if @logger
   end
 
