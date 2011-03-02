@@ -40,7 +40,7 @@ class BarclayScrape
   def export_data(type="All")
     # Export request page
     page = @agent.get EXPORT_ENDPOINT
-    form = page.forms.first
+    form = page.forms_with(:action => "ExportData1.do")[0]
     form.FProductIdentifier = type
     page = @agent.submit(form, form.buttons.first)
 
