@@ -27,7 +27,7 @@ class BarclayScrape
     if params[:logger]
       @logger = params[:logger]
     end
-    @agent = WWW::Mechanize.new
+    @agent = Mechanize.new
     login
   end
 
