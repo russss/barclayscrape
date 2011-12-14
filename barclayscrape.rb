@@ -5,7 +5,7 @@ require 'mechanize'
 # A library to programmatically mainpulate Barclays online banking.
 class BarclayScrape
   LOGIN_ENDPOINT='https://ibank.barclays.co.uk/olb/u/LoginMember.do'
-  EXPORT_ENDPOINT='https://ibank.barclays.co.uk/olb/w/Redirect.do?go=ExportData1.do%3Faction%3DExport%2BBank%2BStatement||Export%2BData&Go=Go'
+  EXPORT_ENDPOINT='https://ibank.barclays.co.uk/olb/x/Redirect.do?go=ExportData1.do%3Faction%3DExport%2BBank%2BStatement%7C%7CExport%2BData&Go=Go'
 
   # Initialize the class. Requires your surname, online banking membership number,
   # and either :cardnumber and :otp (8-digit one-time password from your PINSentry), or
