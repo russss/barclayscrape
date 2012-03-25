@@ -4,8 +4,8 @@ require 'mechanize'
 
 # A library to programmatically mainpulate Barclays online banking.
 class BarclayScrape
-  LOGIN_ENDPOINT='https://ibank.barclays.co.uk/olb/y/LoginMember.do'
-  EXPORT_ENDPOINT='https://ibank.barclays.co.uk/olb/y/Redirect.do?go=ExportData1.do%3Faction%3DExport%2BBank%2BStatement%7C%7CExport%2BData&Go=Go'
+  LOGIN_ENDPOINT='https://bank.barclays.co.uk/olb/auth/LoginLink.action'
+  EXPORT_ENDPOINT='https://bank.barclays.co.uk/olb/balances/ExportDataStep1.action'
 
   # Initialize the class. Requires your surname, online banking membership number,
   # and either :cardnumber and :otp (8-digit one-time password from your PINSentry), or
@@ -40,13 +40,13 @@ class BarclayScrape
   def export_data(type="All")
     # Export request page
     page = @agent.get EXPORT_ENDPOINT
-    form = page.forms_with(:action => "ExportData1.do")[0]
-    form.FProductIdentifier = type
+    form = page.forms_with(:name => "process-form").first
+    form.productIdentifier = type
     page = @agent.submit(form, form.buttons.first)
 
     # Export confirm page
-    form = page.forms[1]
-    file = @agent.submit(form, form.buttons.first)
+    form = page.forms_with(:name => "process-form").first
+    file = @agent.submit(form, form.buttons_with(:name => "action:ExportDataStep2All_download").first)
     return file.body
   end
 
@@ -66,13 +66,13 @@ class BarclayScrape
     page = @agent.get LOGIN_ENDPOINT
     form = page.forms.first
     form.surname = SURNAME
-    form.membershipNo = MEMBERSHIP_NO
+    form.membershipNumber = MEMBERSHIP_NO
     page = @agent.submit(form, form.buttons.first)
 
     # Login step two: PINSentry
     @logger.debug("Login stage 2") if @logger
     form = page.forms.first
-    form.digits = @cardnumber[-4,4]
+    form.cardDigits = @cardnumber[-4,4]
     form.oneTimePasscode1 = @otp[0..3]
     form.oneTimePasscode2 = @otp[4..7]
     page = @agent.submit(form, form.buttons.first)
