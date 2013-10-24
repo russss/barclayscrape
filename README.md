@@ -12,6 +12,11 @@ provided by the Barclays PINSentry reader:
     bs = BarclayScrape.new(SURNAME, MEMBERSHIP_NO,
                     :cardnumber => '1234567890123456', :otp => '62458413')
 
+Or if you're using the Mobile PINsentry phone app you can use the `:motp` argument
+
+    bs = BarclayScrape.new(SURNAME, MEMBERSHIP_NO,
+                    :motp => '12345678')
+
 But typing into that little device is no fun, and a pain to automate. So we also
 support Adrian Kennard's nifty barclays-pinsentry emulator:
 
