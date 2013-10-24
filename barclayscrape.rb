@@ -14,17 +14,18 @@ class BarclayScrape
     @surname = surname
     @membership_no = membership_no
     params = {:pinsentry_binary => './barclays-pinsentry'}.merge!(params)
-    if params[:cardnumber]
+    if params[:otp] and params[:cardnumber]
       @cardnumber = params[:cardnumber]
-    end
-    if params[:otp]
       @otp = params[:otp]
+    elsif params[:motp]
+      @motp = params[:motp]
+      @otp = @motp
     elsif params[:pinsentry_binary] and params[:pin]
       @pinsentry_binary = params[:pinsentry_binary]
       @pin = params[:pin]
       get_pinsentry_data
     else
-      raise ArgumentError.new("Either provide :otp and :cardnumber or :pin")
+      raise ArgumentError.new("Either provide :cardnumber and :otp or :motp or :pin")
     end
     if params[:logger]
       @logger = params[:logger]
@@ -43,7 +44,7 @@ class BarclayScrape
     # Export request page
     page = @agent.get EXPORT_ENDPOINT
     form = page.forms_with(:name => "process-form").first
-    form.productIdentifier = type
+    form['productIdentifier'] = type
     page = @agent.submit(form, form.buttons.first)
 
     # Export confirm page
@@ -74,9 +75,19 @@ class BarclayScrape
     # Login step two: PINSentry
     @logger.debug("Login stage 2") if @logger
     form = page.forms.first
-    form.cardDigits = @cardnumber[-4,4]
-    form.oneTimePasscode1 = @otp[0..3]
-    form.oneTimePasscode2 = @otp[4..7]
+    if @motp
+        form.field_with(:id => "pin-authorise3").value = @otp[0..3]
+        form.field_with(:id => "pin-authorise4").value = @otp[4..7]
+        form.field_with(:id => "pin-authorise1").node['disabled'] = 'true'
+        form.field_with(:id => "pin-authorise2").node['disabled'] = 'true'
+        form.radiobutton_with(:name => 'pinsentrySelection', :value => 'mobilePINsentry').check 
+    else
+        form['cardDigits'] = @cardnumber[-4,4]
+        form.field_with(:id => "pin-authorise1").value = @otp[0..3]
+        form.field_with(:id => "pin-authorise2").value = @otp[4..7]
+        form.field_with(:id => "pin-authorise3").node['disabled'] = 'true'
+        form.radiobutton_with(:name => 'pinsentrySelection', :value => 'cardPINsentry').check
+    end
     page = @agent.submit(form, form.buttons.first)
   end
 end
