@@ -6,6 +6,7 @@ require 'mechanize'
 class BarclayScrape
   LOGIN_ENDPOINT='https://bank.barclays.co.uk/olb/auth/LoginLink.action'
   EXPORT_ENDPOINT='https://bank.barclays.co.uk/olb/balances/ExportDataStep1.action'
+  STATEMENTS_ENDPOINT='https://bank.barclays.co.uk/olb/balances/SeeStatementsDirect.action?productIdentifier='
 
   # Initialize the class. Requires your surname, online banking membership number,
   # and either :cardnumber and :otp (8-digit one-time password from your PINSentry), or
@@ -51,6 +52,34 @@ class BarclayScrape
     form = page.forms_with(:name => "process-form").first
     file = @agent.submit(form, form.buttons_with(:name => "action:ExportDataStep2All_download").first)
     return file.body
+  end
+
+  def extract_html_statement(account_number)
+    page = @agent.get STATEMENTS_ENDPOINT + account_number
+    txns = {}
+    rows = page./('table#filterable tbody tr')
+    rows.each do |row|
+        row_id = row['id'].gsub(/transaction_(\d+).*/, '\1')
+        if txns[row_id]
+            txd = txns[row_id]
+        else
+            txd = {}
+        end
+        if row['id'] =~ /reveal/
+            txd['amount'] = row.at('.spend').text.strip
+            txd['trans-type'] = row.at('.trans-type').text.strip
+            txd['ref'] = row./('.keyword-search')[2].text.strip
+            if row./('.keyword-search')[3]
+                txd['ref2'] = row./('.keyword-search')[3].text.strip
+            end
+        else
+            txd['date'] = row.at('.date').text.strip
+            txd['description'] = row.at('.description').text.strip
+            txd['balance'] = row.at('.balance').text.strip
+        end
+        txns[row_id] = txd
+    end
+    txns
   end
 
   private
