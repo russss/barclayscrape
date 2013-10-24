@@ -11,6 +11,8 @@ class BarclayScrape
   # and either :cardnumber and :otp (8-digit one-time password from your PINSentry), or
   # your :pin and a working smartcard reader.
   def initialize(surname, membership_no, params)
+    @surname = surname
+    @membership_no = membership_no
     params = {:pinsentry_binary => './barclays-pinsentry'}.merge!(params)
     if params[:cardnumber]
       @cardnumber = params[:cardnumber]
@@ -65,8 +67,8 @@ class BarclayScrape
     @logger.debug("Login stage 1") if @logger
     page = @agent.get LOGIN_ENDPOINT
     form = page.forms.first
-    form.surname = SURNAME
-    form.membershipNumber = MEMBERSHIP_NO
+    form['surname'] = @surname
+    form['membershipNumber'] = @membership_no
     page = @agent.submit(form, form.buttons.first)
 
     # Login step two: PINSentry
