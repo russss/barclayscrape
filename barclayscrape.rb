@@ -2,6 +2,7 @@
 # This file is distributed under the terms of the GNU Public License v2
 require 'mechanize'
 
+
 # A library to programmatically mainpulate Barclays online banking.
 class BarclayScrape
   LOGIN_ENDPOINT='https://bank.barclays.co.uk/olb/auth/LoginLink.action'
@@ -35,6 +36,7 @@ class BarclayScrape
       @logger = params[:logger]
     end
     @agent = Mechanize.new
+    @agent.ssl_version = :SSLv3
     login
   end
 
