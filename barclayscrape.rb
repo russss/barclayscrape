@@ -22,6 +22,9 @@ class BarclayScrape
       @motp = params[:motp]
       @otp = @motp
     elsif params[:pinsentry_binary] and params[:pin]
+      if params[:cardnumber]
+        @cardnumber = params[:cardnumber]
+      end
       @pinsentry_binary = params[:pinsentry_binary]
       @pin = params[:pin]
       get_pinsentry_data
