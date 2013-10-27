@@ -134,8 +134,10 @@ class BarclayScrape
         form['cardDigits'] = @cardnumber[-4,4]
         form.field_with(:id => "pin-authorise1").value = @otp[0..3]
         form.field_with(:id => "pin-authorise2").value = @otp[4..7]
-        form.field_with(:id => "pin-authorise3").node['disabled'] = 'true'
-        form.radiobutton_with(:name => 'pinsentrySelection', :value => 'cardPINsentry').check
+        card_field = form.radiobutton_with(:name => 'pinsentrySelection', :value => 'cardPINsentry')
+        if card_field
+          card_field.check
+        end
     end
     page = @agent.submit(form, form.buttons.first)
   end
