@@ -131,9 +131,13 @@ class BarclayScrape
         form.field_with(:id => "pin-authorise2").node['disabled'] = 'true'
         form.radiobutton_with(:name => 'pinsentrySelection', :value => 'mobilePINsentry').check 
     else
-        form['cardDigits'] = @cardnumber[-4,4]
+        # Different accounts require different numbers of card digits, so check the field size
+        num_digits = form.field_with(:name => 'cardDigits').node['size'].to_i
+        form['cardDigits'] = @cardnumber[-num_digits, num_digits]
         form.field_with(:id => "pin-authorise1").value = @otp[0..3]
         form.field_with(:id => "pin-authorise2").value = @otp[4..7]
+
+        # This only appears to be present if the account has mobile auth set up
         card_field = form.radiobutton_with(:name => 'pinsentrySelection', :value => 'cardPINsentry')
         if card_field
           card_field.check
