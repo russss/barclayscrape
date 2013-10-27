@@ -38,6 +38,17 @@ class BarclayScrape
     login
   end
 
+  def account_list()
+    page = @agent.get EXPORT_ENDPOINT
+    form = page.forms_with(:name => "process-form").first
+    results = []
+
+    form.field_with(:name => "productIdentifier").options.each do |option|
+      results.push(option.value) unless ['All', 'BUSINESS', 'PERSONAL'].include? option.value
+    end
+    return results
+  end
+
   # Returns a string in OFX format. The type parameter controls which 
   # accounts to return, and can be one of the following strings:
   #   All::       All your accounts
@@ -51,9 +62,15 @@ class BarclayScrape
     form['productIdentifier'] = type
     page = @agent.submit(form, form.buttons.first)
 
+    if !['All', 'PERSONAL', 'BUSINESS'].include? type
+      # Exporting specific accounts sends you via another page
+      form = page.form_with(:name => "process-form")
+      page = @agent.submit(form, form.button_with(:name => "action:ExportDataStep2_display"))
+    end
+
     # Export confirm page
-    form = page.forms_with(:name => "process-form").first
-    file = @agent.submit(form, form.buttons_with(:name => "action:ExportDataStep2All_download").first)
+    form = page.form_with(:name => "process-form")
+    file = @agent.submit(form, form.button_with(:name => "action:ExportDataStep2All_download"))
     return file.body
   end
 
