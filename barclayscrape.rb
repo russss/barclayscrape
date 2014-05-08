@@ -69,7 +69,9 @@ class BarclayScrape
             if row['id'] =~ /reveal/
                 txd['amount'] = row.at('.spend').text.strip
                 txd['trans-type'] = row.at('.trans-type').text.strip
-                txd['ref'] = row./('.keyword-search')[2].text.strip
+                if row./('.keyword-search')[2]
+                    txd['ref'] = row./('.keyword-search')[2].text.strip
+                end
                 if row./('.keyword-search')[3]
                     txd['ref2'] = row./('.keyword-search')[3].text.strip
                 end

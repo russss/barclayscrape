@@ -25,11 +25,14 @@ ACCOUNTS.each do |label, number|
     if data.length
         File.open('export/' + label + '.csv', 'w') do |file|
             data.each do |k, d|
-                ref = d['ref']
-                if d['ref2']
-                    ref = sprintf("%s-%s", ref, d['ref2'])
+                ref = ''
+                if d['ref']
+                    ref = sprintf("-%s", d['ref'])
+                    if d['ref2']
+                        ref = sprintf("%s-%s", ref, d['ref2'])
+                    end
                 end
-                line = sprintf("%s,%s-%s-%s,%s\n", d['date'], d['trans-type'], d['description'], ref, d['amount'].gsub(/[£,]/, ''))
+                line = sprintf("%s,%s-%s%s,%s\n", d['date'], d['trans-type'], d['description'], ref, d['amount'].gsub(/[£,]/, ''))
                 file.write(line)
             end
             file.close()
