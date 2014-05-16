@@ -36,7 +36,12 @@ class BarclayScrape
       @logger = params[:logger]
     end
     @agent = Mechanize.new
+    cert_store = OpenSSL::X509::Store.new
+    cert_store.add_file 'cacert.pem'
+    @agent.cert_store = cert_store
+
     @agent.ssl_version = :SSLv3
+    @agent.user_agent_alias = 'Windows IE 8'
     login
   end
 
