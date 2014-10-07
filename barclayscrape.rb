@@ -67,6 +67,7 @@ class BarclayScrape
     page = @agent.get EXPORT_ENDPOINT
     form = page.forms_with(:name => "process-form").first
     form['productIdentifier'] = type
+    form['reqSoftwarePkgCode'] = '7'
     page = @agent.submit(form, form.buttons.first)
 
     if !['All', 'PERSONAL', 'BUSINESS'].include? type
