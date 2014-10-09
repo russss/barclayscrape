@@ -87,25 +87,29 @@ class BarclayScrape
     txns = {}
     rows = page./('table#filterable tbody tr')
     rows.each do |row|
-        row_id = row['id'].gsub(/transaction_(\d+).*/, '\1')
-        if txns[row_id]
-            txd = txns[row_id]
-        else
-            txd = {}
-        end
-        if row['id'] =~ /reveal/
-            txd['amount'] = row.at('.spend').text.strip
-            txd['trans-type'] = row.at('.trans-type').text.strip
-            txd['ref'] = row./('.keyword-search')[2].text.strip
-            if row./('.keyword-search')[3]
-                txd['ref2'] = row./('.keyword-search')[3].text.strip
+        if row['id']
+            row_id = row['id'].gsub(/transaction_(\d+).*/, '\1')
+            if txns[row_id]
+                txd = txns[row_id]
+            else
+                txd = {}
             end
-        else
-            txd['date'] = row.at('.date').text.strip
-            txd['description'] = row.at('.description').text.strip
-            txd['balance'] = row.at('.balance').text.strip
+            if row['id'] =~ /reveal/
+                txd['amount'] = row.at('.spend').text.strip
+                txd['trans-type'] = row.at('.trans-type').text.strip
+                if row./('.keyword-search')[2]
+                    txd['ref'] = row./('.keyword-search')[2].text.strip
+                end
+                if row./('.keyword-search')[3]
+                    txd['ref2'] = row./('.keyword-search')[3].text.strip
+                end
+            else
+                txd['date'] = row.at('.date').text.strip
+                txd['description'] = row.at('.description').text.strip
+                txd['balance'] = row.at('.balance').text.strip
+            end
+            txns[row_id] = txd
         end
-        txns[row_id] = txd
     end
     txns
   end
