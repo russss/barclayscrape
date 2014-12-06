@@ -31,12 +31,16 @@ membership number, and the last digits of your authentication card.
 
 Then:
 
-    $ ./get_ofx.js --otp="12345678"
+    $ ./get_ofx.js --otp=<otp>
 
-Where `otp` is your PINSentry one-time password.
+Where `otp` is your PINSentry one-time password. Barclayscrape will download
+a .ofx file for each of your bank accounts (assuming there are
+transactions available) into the current directory.
 
 Typing in your OTP every time is a pain, so we also ship Adrian
-Kennard's barclays-pinsentry emulator.
+Kennard's barclays-pinsentry emulator (see below for tips):
+
+    $ casperjs ./get_ofx.js --otp=`./barclays-pinsentry -p <pin> -o`
 
 Setting up barclays-pinsentry
 -----------------------------
@@ -50,6 +54,3 @@ the card reader. Then you should be able to run it:
 
     $ ./barclays-pinsentry -l
      0: Gemplus GemPC Twin 00 00
-    $ ./barclays-pinsentry -i
-     <my debit card number redacted>
-
