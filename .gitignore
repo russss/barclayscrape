@@ -1,1 +1,5 @@
 barclays-pinsentry
+config.js
+*.ofx
+*.png
+.DS_Store
