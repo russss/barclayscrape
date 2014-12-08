@@ -72,14 +72,17 @@ function login(casper, loginOpts) {
                         '#pinsentryRadioBtn-mobile': 'mobilePINsentry'
                     });
                 } else if (config.card_digits && loginOpts.otp) {
-                    this.fillSelectors('form#login-form', {
+                    var fields = {
                         '#card-digits': config.card_digits,
                         '#pin-authorise1': part1,
-                        '#pin-authorise2': part2,
-                        '#pin-authorise3': '',
-                        '#pin-authorise4': '',
-                        '#pinsentryRadioBtn-card': 'cardPINsentry'
-                    });
+                        '#pin-authorise2': part2
+                    }
+                    if (this.exists('#pinsentryRadioBtn-card')) {
+                        // This option only exists if you've enabled mobile PINSentry on
+                        // your account
+                        fields['#pinsentryRadioBtn-card'] = 'cardPINsentry';
+                    }
+                    this.fillSelectors('form#login-form', fields);
                 }
                 this.click('input.action-button:not(.cancel)');
             }, function loginStageTwoTimeout() {
