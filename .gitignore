@@ -3,3 +3,4 @@ config.js
 *.ofx
 *.png
 .DS_Store
+export/

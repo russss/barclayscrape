@@ -1,8 +1,16 @@
 Barclayscrape
 =============
-Code to programmatically mainpulate Barclays online banking.
-At the moment it only supports logging in and exporting all your
-accounts data to .ofx.
+Code to programmatically manipulate Barclays online banking.
+At the moment it supports:
+
+* Logging in
+* Fetching a list of accounts
+* `get_ofx.js` uses the export function to fetch an .ofx
+file for each of your bank accounts (assuming there are
+transactions available) into the current directory.
+* `export_csv.js` parses HTML statements into a CSV
+file for each of your bank accounts and saves them into the `export`
+directory.
 
 Version 2
 ---------
@@ -14,8 +22,7 @@ less on the position of objects within the page.
 This new code should be more future-proof against online banking
 changes.
 
-Unfortunately a couple of the features of the old code have been removed
-in this rewrite. The old Ruby version can be found in the barclayscrape-1
+The old Ruby version can be found in the barclayscrape-1
 branch.
 
 Prerequisites
@@ -24,27 +31,55 @@ Prerequisites
 * [Phantomjs](http://phantomjs.org/) 1.9
 * [Casperjs](http://casperjs.readthedocs.org/) 1.1
 
-Use
----
-Firstly copy `config.js.example` to `config.js`, and fill in your surname,
-membership number, and the last digits of your authentication card.
+Configuration
+-------------
+Copy `config.js.example` to `config.js`, and fill in:
 
-Then:
+* `surname`
+* `membership_number`
+
+If you use the Mobile PINSentry app, that's it, otherwise you'll
+be using the PINSentry card reader and will also need:
+
+* `card_digits` (last digits of your authentication card)
+
+If you know your account numbers, want to limit the exported files
+and give them aliases for readability, you can set:
+
+* `accounts` an object e.g:
+
+```
+accounts: { 
+    'gbp': '12345678901234',
+    'eur': '12345678901234',
+    'usd': '12345678901234'
+}
+```
+
+Otherwise, you can leave it null and all accounts will be exported
+
+Usage
+-----
+
+If you use the Mobile PINSentry app, no arguments are needed
+
+    $ ./get_ofx.js # or export_csv.js
+
+Otherwise, you'll need the PINSentry card reader and usage is like so:
 
     $ ./get_ofx.js --otp=<otp>
 
-Where `otp` is your PINSentry one-time password. Barclayscrape will download
-a .ofx file for each of your bank accounts (assuming there are
-transactions available) into the current directory.
+Where `otp` is your PINSentry one-time password.
+
+PINSentry emulator `barclays-pinsentry`
+---------------------------------------
 
 Typing in your OTP every time is a pain, so we also ship Adrian
 Kennard's barclays-pinsentry emulator (see below for tips):
 
-    $ casperjs ./get_ofx.js --otp=`./barclays-pinsentry -p <pin> -o`
+    $ ./get_ofx.js --otp=`./barclays-pinsentry -p <pin> -o`
 
-Setting up barclays-pinsentry
------------------------------
-I've only tested this on Ubuntu/Debian Linux. You will need:
+Only tested on Ubuntu/Debian Linux. You will need:
 
 * A pcsc-compatible smartcard reader (I use the Gemalto PC Twin USB which can be had for about £20)
 * The pcsc, libpcsclite-dev, and libpopt-dev packages
