@@ -1,5 +1,6 @@
 {
   "name": "barclayscrape",
+  "private": true,
   "version": "1.0.0",
   "description": "A small app to programmatically manipulate Barclays online banking",
   "main": "get_ofx.js",
