@@ -4,7 +4,8 @@
   "description": "A small app to programmatically manipulate Barclays online banking",
   "main": "get_ofx.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "casperjs get_ofx.js"
   },
   "repository": {
     "type": "git",
