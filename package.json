@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/russss/barclayscrape/issues"
   },
-  "homepage": "https://github.com/russss/barclayscrape"
+  "homepage": "https://github.com/russss/barclayscrape",
+  "dependencies": {
+    "casperjs": "^1.1.0-beta3"
+  }
 }
