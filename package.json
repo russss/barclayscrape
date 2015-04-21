@@ -1,0 +1,19 @@
+{
+  "name": "barclayscrape",
+  "version": "1.0.0",
+  "description": "A small app to programmatically manipulate Barclays online banking",
+  "main": "get_ofx.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/russss/barclayscrape.git"
+  },
+  "author": "Russ Garrett <russ@garrett.co.uk>",
+  "license": "GPL v2",
+  "bugs": {
+    "url": "https://github.com/russss/barclayscrape/issues"
+  },
+  "homepage": "https://github.com/russss/barclayscrape"
+}
