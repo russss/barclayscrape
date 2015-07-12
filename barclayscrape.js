@@ -13,7 +13,7 @@ function login(casper, loginOpts) {
         this.capture('error.png');
         this.die(msg, 1);
     });
-    casper.userAgent('Mozilla 5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.61 Safari/537.36');
+    casper.userAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.61 Safari/537.36');
 
     casper.on('remote.message', function(msg) {
         this.log('console message: ' + msg, 'debug');
