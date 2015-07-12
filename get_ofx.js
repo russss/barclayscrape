@@ -43,7 +43,6 @@ function doDownload(accountId, accountNumber) {
         var filename = accountNumber + '.ofx';
         this.echo("Downloading " + filename, "INFO");
         var url = 'https://bank.barclays.co.uk/olb/balances/ExportData_FTB.action?reqSoftwarePkgCode=4&accountIdentifierIndex=' + accountId;
-        casper.echo(url);
         this.download(url, filename);
     });
 }
