@@ -1,48 +1,59 @@
 #!/usr/bin/env casperjs
 var casper = require('casper').create({
-    verbose: true,
-    logLevel: "error",
+    verbose: false,
     pageSettings: {
         webSecurityEnabled: false
     }
 });
 var barclayscrape = require("./barclayscrape");
+
 casper.start();
 
-function downloadOfx (accountName, accountNumber) {
-    casper.thenOpen('https://bank.barclays.co.uk/olb/balances/ExportDataStep1.action', function() {
-        this.echo("Exporting account: " + accountNumber, "INFO");
-        this.fill('.process-form', {
-                 'reqSoftwarePkgCode': 7, // Microsoft Money 2002 (i.e. OFX)
-                 'productIdentifier': accountNumber});
+// Download an OFX file for a given account
+function downloadOfx (accountId, accountNumber) {
+    casper.then(function clickAccountLink() {
+        // Click the link using the javascript .click() in-browser. This allows us to click
+        // links which aren't visible in-page (if we're on the Personal tab and the link is
+        // on the Business tab)
+        var account = "#a" + accountId + " #showStatements"
+        casper.log("Clicking account link " + account, "debug");
+        this.evaluate(function(selector) {
+            $(selector).click();
+        }, account);
     });
-    casper.thenClick('input[type="submit"]'); // Next
-    casper.waitForSelector('#fromExportDate'); // Wait for the details form
-    casper.thenClick('.btn-right input[type="submit"]'); // Next
-    casper.waitForSelector('.body', function exportConfirmation() { // Wait for confirmation page
-        if (casper.exists('div.section-error')) {
-            this.echo("Can't download OFX for " + accountNumber + " (probably nothing there)", "COMMENT");
-        } else {
-            var filename = accountName + '.ofx';
-            this.echo("Downloading " + filename, "INFO");
-            // Here we have to be a bit messy and send the post request manually, as
-            // Casper/Phantom has no way of catching the downloaded file if we click the button.
-            var requestid = this.getElementAttribute('input[name="requestid"]', 'value');
-            this.download('https://bank.barclays.co.uk/olb/balances/ExportDataStep2.action', filename, 'POST', {
-                'requestid': requestid,
-                'requesttoken': '',
-                'action:ExportDataStep2All_download': 'Download'
-            });
-        }
+
+    casper.waitForSelector("a.export", function() {
+        doDownload(accountId, accountNumber);
+    },
+    function noExportLink() {
+        // Accounts with no transactions have no export link
+        casper.log("No export option for account " + accountId + " - possibly no transactions", "warn");
+    });
+
+    // Return to the main page
+    casper.thenClick("#logo");
+    casper.waitForSelector(".account-paging");
+}
+
+function doDownload(accountId, accountNumber) {
+    casper.thenClick("a.export");
+    casper.waitForSelector("div.export-options");
+    casper.then(function downloadOFXFile() {
+        // Here we cheat and just fetch the URL.
+        var filename = accountNumber + '.ofx';
+        this.echo("Downloading " + filename, "INFO");
+        var url = 'https://bank.barclays.co.uk/olb/balances/ExportData_FTB.action?reqSoftwarePkgCode=4&accountIdentifierIndex=' + accountId;
+        casper.echo(url);
+        this.download(url, filename);
     });
 }
 
 barclayscrape.login(casper, {
     onAccounts: function (accounts) {
         // Iterate through each account and export it
-        for (var accountName in accounts) {
-            var accountNumber = accounts[accountName];
-            downloadOfx(accountName, accountNumber);
+        for (var accountId in accounts) {
+            var accountNumber = accounts[accountId];
+            downloadOfx(accountId, accountNumber);
         }
     }
 });

@@ -13,7 +13,7 @@ function login(casper, loginOpts) {
         this.capture('error.png');
         this.die(msg, 1);
     });
-    casper.userAgent('Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)');
+    casper.userAgent('Mozilla 5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.61 Safari/537.36');
 
     casper.on('remote.message', function(msg) {
         this.log('console message: ' + msg, 'debug');
@@ -122,25 +122,23 @@ function fetchAccounts(casper, then) {
     if (config.accounts) {
         then(config.accounts);
     } else {
-        // Load the "Export my Data" modal. There might be an export data widget on the dashboard,
-        // but we shouldn't rely on it.
-        casper.thenClick('a#accounts-menu');
-        casper.waitForSelector('.mega-menu-wrapper'); // "Mega"
-        casper.thenClick('a[href="/olb/balances/ExportDataStep1.action"]');
         casper.then(function fetchAccountList() {
             var accounts = {};
             var account_list = this.evaluate(function() {
-                var nodes = document.querySelectorAll('div#listproductIdentifier input');
+                var nodes = document.querySelectorAll("li.account");
                 var account_nodes = [].filter.call(nodes, function(node) {
-                    // Remove "special" account names (all/business/personal)
-                    return node.value != 'All' && node.value != 'BUSINESS' && node.value != 'PERSONAL';
+                    var product = node.getAttribute("data-product-class")
+                    // Filter to only include current and savings accounts
+                    return product == "CU" || product == "SV";
                 });
                 return [].map.call(account_nodes, function(node) {
-                    return node.value;
+                    var id = node.id.substr(1);
+                    var product = node.querySelectorAll("span.edit-account-form")[0].getAttribute("data-product-identifier");
+                    return [id, product];
                 });
             });
             this.each(account_list, function (self, acct) {
-                accounts[acct] = acct;
+                accounts[acct[0]] = acct[1];
             });
             then(accounts);
         });
