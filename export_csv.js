@@ -95,7 +95,7 @@ function writeCsv(accountName, accountNumber, statement) {
                 ref = ref + '-' + d.ref2;
             }
         }
-        return d['date'] + ',' + d['trans-type'] + '-' + d['description'] + ref + ',' + d['amount'].replace(/[£,]/g, '');
+        return d['date'] + ',' + d['trans-type'].replace(/,/g, ';') + '-' + d['description'].replace(/,/g, ';') + ref + ',' + d['amount'].replace(/[£,]/g, '');
     });
 
     require('fs').write('export/' + filename, [].join.call(csvLines, '\n'), 'w');
