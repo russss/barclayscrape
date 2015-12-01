@@ -28,7 +28,7 @@ function downloadOfx (accountId, accountNumber) {
     function noExportLink() {
         // Accounts with no transactions have no export link
         casper.log("No export option for account " + accountId + " - possibly no transactions", "warn");
-    });
+    }, 10000);
 
     // Return to the main page
     casper.thenClick("#logo");
