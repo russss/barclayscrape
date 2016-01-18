@@ -104,6 +104,9 @@ function login(casper, loginOpts) {
         this.log("Waiting to be logged in", "debug");
         this.waitForSelector('a#logout', function waitForLogin() {
             this.echo("Successfully logged in", "INFO");
+            if (loginOpts.onLogin) {
+                loginOpts.onLogin()
+            }
             if (loginOpts.onAccounts) {
                 fetchAccounts(this, loginOpts.onAccounts);
             }

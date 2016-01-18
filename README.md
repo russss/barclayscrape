@@ -8,6 +8,9 @@ At the moment it supports:
 * `get_ofx.js` uses the export function to fetch an .ofx
 file for each of your bank accounts (assuming there are
 transactions available) into the current directory.
+* `get_combined_ofx.js` fetches a combined .ofx file of all
+available transactions for all accounts into `all.ofx` in the current
+directory.
 * `export_csv.js` parses HTML statements into a CSV
 file for each of your bank accounts and saves them into the `export`
 directory.
