@@ -68,11 +68,17 @@ If you use the Mobile PINSentry app, no arguments are needed
 
     $ ./get_ofx.js # or export_csv.js
 
-Otherwise, you'll need the PINSentry card reader and usage is like so:
+To log in via the PINSentry card reader, usage is like so:
 
     $ ./get_ofx.js --otp=<otp>
 
 Where `otp` is your PINSentry one-time password.
+
+Finally, you can log non-interactively, by also passing a pre-configured memorable password and 5 digit passcode.
+This is supported if your Barclays account was set up to allow non-PIN-Sentry access, but it is unclear whether Barclays allow existing account holders to opt into this anymore
+Logging in this way will still require PIN-Sentry to transfer funds, but you should take measures to secure the script if you choose to use this method. 
+
+    $ ./get_ofx.js --mcode=<memorable password> --pcode=<5 digit passcode>
 
 PINSentry emulator `barclays-pinsentry`
 ---------------------------------------
