@@ -4,6 +4,9 @@ function login(casper, loginOpts) {
     loginOpts = loginOpts || {};
     if (casper.cli.has("otp")) {
         loginOpts.otp = String(casper.cli.get('otp'));
+    } else if (casper.cli.has("pcode") && casper.cli.has("mcode")) {
+        loginOpts.pcode = String(casper.cli.get('pcode'));
+        loginOpts.mcode = String(casper.cli.get('mcode'));
     } else {
         casper.echo('Identify with mobile pin sentry: ', 'INFO');
         loginOpts.motp = require('system').stdin.readLine();
@@ -31,9 +34,10 @@ function login(casper, loginOpts) {
         } else if (config.card_digits && loginOpts.otp) {
             part1 = loginOpts.otp.slice(0, 4);
             part2 = loginOpts.otp.slice(4, 8);
-        } else {
-            this.die("Please provide card_digits and otp or motp", 3);
+        } else if (!(loginOpts.mcode && loginOpts.pcode)) {
+            this.die("Please provide card_digits, plus either otp or motp (or pcode and mcode)", 3);
         }
+
         if (this.exists("form#accordion-top-form")) {
             this.fill("form#accordion-top-form", {
                 'surname': config.surname,
@@ -42,11 +46,56 @@ function login(casper, loginOpts) {
             this.click('button#forward');
             this.waitForSelector('input#card-digits', function loginStageTwo() {
                 this.log("Login stage 2");
-                this.fill('form#accordion-bottom-form', {
-                    'cardDigits': config.card_digits,
-                    'oneTimePasscode1': part1,
-                    'oneTimePasscode2': part2
-                });
+                
+                // log in via passcode and memorable password
+                if (loginOpts.pcode && loginOpts.mcode) {
+                    this.log("Attempting to log in non-interactively");
+                    if (this.exists("fieldset.letter-select legend strong")) {
+                        // parse the two requested indices (ie, "1st " and "12th") from memorable password
+                        var indices = this.evaluate(function getIndices() {
+                            var digits = /^[0-9]{1,2}/;
+                            return [
+                                document.querySelector("fieldset.letter-select legend strong:nth-of-type(1)").innerText.match(digits),
+                                document.querySelector("fieldset.letter-select legend strong:nth-of-type(2)").innerText.match(digits)
+                            ];
+                        });
+                        
+                        // ensure both indices are valid and adjust to 0-based
+                        for (var i=0; i<2; i++) {
+                            indices[i]--;
+                            if ((indices[i] === null) || (indices[i] < 0)) {
+                                this.capture("login-error.png");
+                                this.die("Failed to parse requested memorable password indices. Screenshot saved to login-error.png.", 2);
+                            }
+
+                            if (indices[i] >= loginOpts.mcode.length) {
+                                this.capture("login-error.png");
+                                this.die("Requested char: "+ indices[i].toString() +" exceeded length of supplied mcode: "+loginOpts.mcode.length.toString()+". Screenshot saved to login-error.png.", 2);
+                            }
+                        }
+                        
+                        // extract the two requested characters from memorable password
+                        var chars = [loginOpts.mcode.substring(indices[0], indices[0]+1), loginOpts.mcode.substring(indices[1],indices[1]+1)];
+                        this.fill('form#accordion-bottom-form', {
+                            'passcode': loginOpts.pcode,
+                            'firstMemorableCharacter': chars[0],
+                            'secondMemorableCharacter': chars[1]
+                        });
+                        this.click('button#log-in-to-online-banking2');
+                    }
+                    else
+                    {
+                        this.capture("login-error.png");
+                        this.die("Could not find option to log in via memorable password. Check your account is setup to allow this.. Screenshot saved to login-error.png.", 2);
+                    }
+                }
+                else {
+                    this.fill('form#accordion-bottom-form', {
+                        'cardDigits': config.card_digits,
+                        'oneTimePasscode1': part1,
+                        'oneTimePasscode2': part2
+                    });
+                }
                 this.click('button#log-in-to-online-banking');
             }, function loginStageTwoTimeout() {
                 this.capture("login-error.png");
@@ -130,7 +179,7 @@ function fetchAccounts(casper, then) {
             var account_list = this.evaluate(function() {
                 var nodes = document.querySelectorAll("li.account");
                 var account_nodes = [].filter.call(nodes, function(node) {
-                    var product = node.getAttribute("data-product-class")
+                    var product = node.getAttribute("data-product-class");
                     // Filter to only include current and savings accounts
                     return product == "CU" || product == "SV";
                 });

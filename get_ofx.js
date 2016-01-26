@@ -57,4 +57,11 @@ barclayscrape.login(casper, {
     }
 });
 
-casper.run();
+casper.run(function() {
+    // workaround to suppress benign stdout errors - https://github.com/ariya/phantomjs/issues/12697
+    var _this = this;
+    _this.page.close();
+    setTimeout(function exit(){
+        _this.exit(0);
+    }, 0);
+});
