@@ -76,6 +76,9 @@ function login(casper, loginOpts) {
                         
                         // extract the two requested characters from memorable password
                         var chars = [loginOpts.mcode.substring(indices[0], indices[0]+1), loginOpts.mcode.substring(indices[1],indices[1]+1)];
+                        if (this.exists('#passcode-radio')) {
+                            this.click("#passcode-radio");
+                        }
                         this.fill('form#accordion-bottom-form', {
                             'passcode': loginOpts.pcode,
                             'firstMemorableCharacter': chars[0],
@@ -154,7 +157,7 @@ function login(casper, loginOpts) {
         this.waitForSelector('a#logout', function waitForLogin() {
             this.echo("Successfully logged in", "INFO");
             if (loginOpts.onLogin) {
-                loginOpts.onLogin()
+                loginOpts.onLogin();
             }
             if (loginOpts.onAccounts) {
                 fetchAccounts(this, loginOpts.onAccounts);
