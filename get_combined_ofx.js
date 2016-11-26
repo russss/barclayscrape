@@ -16,7 +16,7 @@ function downloadCombinedOfx () {
     casper.then(function clickAccountLink() {
         // Click the link using the javascript .click() in-browser. This allows us to click
         // the "View all online services" link in the (you can't make it up) "megaMenu":
-        var account = "a#megaMenu_1_viewAllOnlineServices"
+        var account = "a#megaMenu_1_viewAllOnlineServices";
         casper.log("Clicking account link", "debug");
         this.evaluate(function(selector) {
             $(selector).click();
@@ -44,13 +44,13 @@ function doDownload() {
 
     casper.waitForSelector("input#data-download", function downloadOFXFile() {
         requestid = casper.getElementAttribute('form.process-form input[name="requestid"]', "value");
-        var url = "https://bank.barclays.co.uk/olb/balances/ExportDataStep2All.action"
+        var url = "https://bank.barclays.co.uk/olb/balances/ExportDataStep2All.action";
         this.download(url, 'all.ofx', 'POST', {'requestid': requestid,
                                                'requesttoken': '',
                                                'action:ExportDataStep2All_download': 'Download'});
-        casper.log("Statement for all accounts downloaded to all.ofx", "INFO")
+        casper.log("Statement for all accounts downloaded to all.ofx", "INFO");
     }, function step1Timeout() {
-        casper.log("Unable to submit export data form step 1. Error saved.", "error")
+        casper.log("Unable to submit export data form step 1. Error saved.", "error");
         this.capture("combined-export-step1-error.png");
     }, 10000);
 }
