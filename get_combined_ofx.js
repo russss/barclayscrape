@@ -8,6 +8,7 @@ var casper = require('casper').create({
     }
 });
 var barclayscrape = require("./barclayscrape");
+var export_link_text = "Export my transaction data";
 
 casper.start();
 
@@ -23,7 +24,7 @@ function downloadCombinedOfx () {
     });
 
     // Barclays, you are really spoiling us with your semantic element IDs.
-    casper.waitForSelector("a#link_112", function() {
+    casper.waitForText(export_link_text, function() {
         doDownload();
     },
     function noExportLink() {
@@ -32,7 +33,7 @@ function downloadCombinedOfx () {
 }
 
 function doDownload() {
-    casper.thenClick("a#link_112");
+    casper.clickLabel(export_link_text);
     casper.waitForSelector("input#reqSoftwarePkgCode0");
 
     // Because this website does unholy things with forms and JS, we can't simply fill the form,
