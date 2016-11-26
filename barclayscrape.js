@@ -44,12 +44,13 @@ function login(casper, loginOpts) {
                 'membershipNumber': config.membership_number
             });
             this.click('button#forward');
-            this.waitForSelector('input#card-digits', function loginStageTwo() {
+            this.waitForSelector('input#passcode-radio', function loginStageTwo() {
                 this.log("Login stage 2");
                 
                 // log in via passcode and memorable password
                 if (loginOpts.pcode && loginOpts.mcode) {
                     this.log("Attempting to log in non-interactively");
+                    this.click('input#passcode-radio');
                     if (this.exists("fieldset.letter-select legend strong")) {
                         // parse the two requested indices (ie, "1st " and "12th") from memorable password
                         var indices = this.evaluate(function getIndices() {
