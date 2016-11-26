@@ -44,7 +44,7 @@ function login(casper, loginOpts) {
                 'membershipNumber': config.membership_number
             });
             this.click('button#forward');
-            this.waitForSelector('input#card-digits', function loginStageTwo() {
+            this.waitForSelector('input#passcode-radio, input#card-digits', function loginStageTwo() {
                 this.log("Login stage 2");
                 
                 // log in via passcode and memorable password
