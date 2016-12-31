@@ -74,27 +74,31 @@ To log in via the PINSentry card reader, usage is like so:
 
 Where `otp` is your PINSentry one-time password.
 
-Finally, you can log non-interactively, by also passing a pre-configured memorable password and 5 digit passcode.
-This is supported if your Barclays account was set up to allow non-PIN-Sentry access, but it is unclear whether Barclays allow existing account holders to opt into this anymore
-Logging in this way will still require PIN-Sentry to transfer funds, but you should take measures to secure the script if you choose to use this method. 
+Finally, you can log non-interactively, by also passing a pre-configured
+memorable password and 5 digit passcode.
+
+This is supported if your Barclays account was set up to allow
+non-PINSentry access, but it is unclear whether Barclays allow existing
+account holders to opt into this any more.
+
+Logging in this way will still require PINSentry to transfer funds, but
+you should take measures to secure the script if you choose to use this method.
 
     $ ./get_ofx.js --mcode=<memorable password> --pcode=<5 digit passcode>
 
-PINSentry emulator `barclays-pinsentry`
----------------------------------------
+Automating PINSentry Generation
+-------------------------------
 
-Typing in your OTP every time is a pain, so we also ship Adrian
-Kennard's barclays-pinsentry emulator (see below for tips):
+Typing in your OTP every time is a pain, but there are ways of
+automating the process entirely using a USB smartcard reader.
 
-    $ ./get_ofx.js --otp=`./barclays-pinsentry -p <pin> -o`
+**NOTE:** This somewhat defeats the purpose of two-factor
+authentication, so please do not implement this unless you are confident
+in your ability to adequately secure the machine running it. It is your
+money at risk.
 
-Only tested on Ubuntu/Debian Linux. You will need:
+The [python-emv](https://github.com/russss/python-emv) package contains
+a tool to generate a one-time password on the command line. It can be
+hooked up to barclayscrape like so:
 
-* A pcsc-compatible smartcard reader (I use the Gemalto PC Twin USB which can be had for about £20)
-* The pcsc, libpcsclite-dev, and libpopt-dev packages
-
-Make the barclays-pinsentry binary using the Makefile provided. Insert your debit/auth card into
-the card reader. Then you should be able to run it:
-
-    $ ./barclays-pinsentry -l
-     0: Gemplus GemPC Twin 00 00
+    $ ./get_ofx.js --otp=`emvtool -p <PIN> cap`
