@@ -46,6 +46,13 @@ be using the PINSentry card reader and will also need:
 
 * `card_digits` (last digits of your authentication card)
 
+**OR** alternatively, you can also login by using your sort code and
+account number. For that you will have to fill in:
+
+* `surname`
+* `sort`
+* `account`
+
 If you know your account numbers, want to limit the exported files
 and give them aliases for readability, you can set:
 

@@ -39,10 +39,23 @@ function login(casper, loginOpts) {
         }
 
         if (this.exists("form#accordion-top-form")) {
-            this.fill("form#accordion-top-form", {
-                'surname': config.surname,
-                'membershipNumber': config.membership_number
-            });
+            // login by sort code & account number method, if set
+            if (!!config.sort && !!config.account) {
+                this.click('input#account-radio');
+                this.fill("form#accordion-top-form", {
+                    'surname': config.surname,
+                    'sortCodeSet1': config.sort.slice(0,2),
+                    'sortCodeSet2': config.sort.slice(2,4),
+                    'sortCodeSet3': config.sort.slice(4,6),
+                    'accountNumber': config.account
+                });
+            // otherwise login with membership number
+            } else {
+                this.fill("form#accordion-top-form", {
+                    'surname': config.surname,
+                    'membershipNumber': config.membership_number
+                });
+            }
             this.click('button#forward');
             this.waitForSelector('input#passcode-radio, input#card-digits', function loginStageTwo() {
                 this.log("Login stage 2");
@@ -99,12 +112,14 @@ function login(casper, loginOpts) {
                         'oneTimePasscode2': part2
                     });
                 }
-                this.click('button#log-in-to-online-banking');
+                if (!(!!config.sort && !!config.account)) {
+                    this.click('button#log-in-to-online-banking');
+                }
             }, function loginStageTwoTimeout() {
                 this.capture("login-error.png");
                 this.debugHTML();
                 this.die("Login stage 2 timeout. Screenshot saved to login-error.png.", 2);
-            }, 10000);
+            }, 30000);
         } else {
             this.fill("form#login-form", {
                 'surname': config.surname,
