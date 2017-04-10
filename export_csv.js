@@ -97,7 +97,8 @@ function writeCsv(accountName, accountNumber, statement) {
         }
         return d['date'] + ',' + d['trans-type'].replace(/,/g, ';') + '-' + d['description'].replace(/,/g, ';') + ref + ',' + d['amount'].replace(/[£,]/g, '');
     });
-    
+
+    csvLines.push('\n');
     csvLines.unshift('Date,Reference,Amount');
     require('fs').write('export/' + filename, [].join.call(csvLines, '\n'), 'w');
     casper.echo("Exporting " + accountName + " account: " + accountNumber + " (" + (csvLines.length - 1) + " rows)");
