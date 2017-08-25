@@ -16,7 +16,7 @@ function login(casper, loginOpts) {
         this.capture('error.png');
         this.die(msg, 1);
     });
-    casper.userAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.61 Safari/537.36');
+    casper.userAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.49 Safari/537.36');
 
     casper.on('remote.message', function(msg) {
         this.log('console message: ' + msg, 'debug');
@@ -25,7 +25,7 @@ function login(casper, loginOpts) {
         this.log('JS error: ' + msg, 'debug');
         this.log(JSON.stringify(backtrace), 'debug');
     });
-    casper.thenOpen('https://bank.barclays.co.uk/olb/auth/LoginLink.action', function loginStageOne() {
+    casper.thenOpen('https://bank.barclays.co.uk/olb/authlogin/loginAppContainer.do', function loginStageOne() {
         this.log("Login stage 1");
         var part1, part2;
         if (loginOpts.motp) {
@@ -38,118 +38,76 @@ function login(casper, loginOpts) {
             this.die("Please provide card_digits, plus either otp or motp (or pcode and mcode)", 3);
         }
 
-        if (this.exists("form#accordion-top-form")) {
-            this.fill("form#accordion-top-form", {
-                'surname': config.surname,
-                'membershipNumber': config.membership_number
-            });
-            this.click('button#forward');
-            this.waitForSelector('input#passcode-radio, input#card-digits', function loginStageTwo() {
-                this.log("Login stage 2");
-                
-                // log in via passcode and memorable password
-                if (loginOpts.pcode && loginOpts.mcode) {
-                    this.log("Attempting to log in non-interactively");
-                    if (this.exists("fieldset.letter-select legend strong")) {
-                        // parse the two requested indices (ie, "1st " and "12th") from memorable password
-                        var indices = this.evaluate(function getIndices() {
-                            var digits = /^[0-9]{1,2}/;
-                            return [
-                                document.querySelector("fieldset.letter-select legend strong:nth-of-type(1)").innerText.match(digits),
-                                document.querySelector("fieldset.letter-select legend strong:nth-of-type(2)").innerText.match(digits)
-                            ];
-                        });
-                        
-                        // ensure both indices are valid and adjust to 0-based
-                        for (var i=0; i<2; i++) {
-                            indices[i]--;
-                            if ((indices[i] === null) || (indices[i] < 0)) {
-                                this.capture("login-error.png");
-                                this.die("Failed to parse requested memorable password indices. Screenshot saved to login-error.png.", 2);
-                            }
 
-                            if (indices[i] >= loginOpts.mcode.length) {
-                                this.capture("login-error.png");
-                                this.die("Requested char: "+ indices[i].toString() +" exceeded length of supplied mcode: "+loginOpts.mcode.length.toString()+". Screenshot saved to login-error.png.", 2);
-                            }
+        this.waitForSelector('input#membershipNum0', function loginStageOneA() {
+            this.fill('form[name="loginStep1"]', {
+                'surname': config.surname,
+                'membershipNum': config.membership_number
+            });
+            this.click('button[title="Next Step"]');
+        });
+
+        // 2017-08 update: This needs a selector for the passcode/memorable word login method adding
+        // (comma-separated list):
+        this.waitForSelector('input#lastDigits0', function loginStageTwo() {
+            this.log("Login stage 2");
+            
+            // log in via passcode and memorable password
+            if (loginOpts.pcode && loginOpts.mcode) {
+                // 2017-08 update: This will need updating for the new form (which I can't see)
+                this.log("Attempting to log in non-interactively");
+                if (this.exists("fieldset.letter-select legend strong")) {
+                    // parse the two requested indices (ie, "1st " and "12th") from memorable password
+                    var indices = this.evaluate(function getIndices() {
+                        var digits = /^[0-9]{1,2}/;
+                        return [
+                            document.querySelector("fieldset.letter-select legend strong:nth-of-type(1)").innerText.match(digits),
+                            document.querySelector("fieldset.letter-select legend strong:nth-of-type(2)").innerText.match(digits)
+                        ];
+                    });
+                    
+                    // ensure both indices are valid and adjust to 0-based
+                    for (var i=0; i<2; i++) {
+                        indices[i]--;
+                        if ((indices[i] === null) || (indices[i] < 0)) {
+                            this.capture("login-error.png");
+                            this.die("Failed to parse requested memorable password indices. Screenshot saved to login-error.png.", 2);
                         }
-                        
-                        // extract the two requested characters from memorable password
-                        var chars = [loginOpts.mcode.substring(indices[0], indices[0]+1), loginOpts.mcode.substring(indices[1],indices[1]+1)];
-                        if (this.exists('#passcode-radio')) {
-                            this.click("#passcode-radio");
+
+                        if (indices[i] >= loginOpts.mcode.length) {
+                            this.capture("login-error.png");
+                            this.die("Requested char: "+ indices[i].toString() +" exceeded length of supplied mcode: "+loginOpts.mcode.length.toString()+". Screenshot saved to login-error.png.", 2);
                         }
-                        this.fill('form#accordion-bottom-form', {
-                            'passcode': loginOpts.pcode,
-                            'firstMemorableCharacter': chars[0],
-                            'secondMemorableCharacter': chars[1]
-                        });
-                        this.click('button#log-in-to-online-banking2');
                     }
-                    else
-                    {
-                        this.capture("login-error.png");
-                        this.die("Could not find option to log in via memorable password. Check your account is setup to allow this.. Screenshot saved to login-error.png.", 2);
+                    
+                    // extract the two requested characters from memorable password
+                    var chars = [loginOpts.mcode.substring(indices[0], indices[0]+1), loginOpts.mcode.substring(indices[1],indices[1]+1)];
+                    if (this.exists('#passcode-radio')) {
+                        this.click("#passcode-radio");
                     }
-                }
-                else {
                     this.fill('form#accordion-bottom-form', {
-                        'cardDigits': config.card_digits,
-                        'oneTimePasscode1': part1,
-                        'oneTimePasscode2': part2
+                        'passcode': loginOpts.pcode,
+                        'firstMemorableCharacter': chars[0],
+                        'secondMemorableCharacter': chars[1]
                     });
+                    this.click('button#log-in-to-online-banking2');
                 }
-                this.click('button#log-in-to-online-banking');
-            }, function loginStageTwoTimeout() {
-                this.capture("login-error.png");
-                this.debugHTML();
-                this.die("Login stage 2 timeout. Screenshot saved to login-error.png.", 2);
-            }, 10000);
-        } else {
-            this.fill("form#login-form", {
-                'surname': config.surname,
-                'membershipNumber': config.membership_number
-            });
-            this.click('input.action-button');
-
-            this.waitForSelector('input#showMobilePINsentryTag-hidden-field',function loginStageTwo() {
-                this.log("Login stage 2");
-                if (this.exists('#pinsentryRadioBtn-card') && this.exists('#pinsentryRadioBtn-mobile')) {
-                    // These options only exist if you've enabled
-                    // mobile PINSentry on your account
-                    if (loginOpts.motp) {
-                        this.click('#pinsentryRadioBtn-mobile');
-                    } else {
-                        this.click('#pinsentryRadioBtn-card');
-                    }
-                    // Not strictly necessary for the scraper but
-                    // remove the dupe name fields so that casper/phantom
-                    // doesn't get confused when checking getFormValues
-                    this.evaluate(function removeMotpFields () {
-                        if (loginOpts.motp) {
-                            __utils__.removeElementsByXPath('//*[@id="pin-authorise1"]');
-                            __utils__.removeElementsByXPath('//*[@id="pin-authorise2"]');
-                        } else {
-                            __utils__.removeElementsByXPath('//*[@id="pin-authorise3"]');
-                            __utils__.removeElementsByXPath('//*[@id="pin-authorise4"]');
-                        }
-                    });
+                else
+                {
+                    this.capture("login-error.png");
+                    this.die("Could not find option to log in via memorable password. Check your account is setup to allow this.. Screenshot saved to login-error.png.", 2);
                 }
-                this.fill('form#login-form', {
-                    'cardDigits': config.card_digits,
-                    'oneTimePasscode1': part1,
-                    'oneTimePasscode2': part2
-                });
-                this.log(JSON.stringify(this.evaluate(function checkLoginFormValues () {
-                    return __utils__.getFormValues('form#login-form');
-                })), 'debug');
-
-                this.click('input.action-button:not(.cancel)');
-            }, function loginStageTwoTimeout() {
-                this.capture("login-error.png");
-                this.die("Login stage 2 timeout. Screenshot saved to login-error.png.", 2);
-            }, 10001);
-        }
+            } else {
+                this.sendKeys('input#lastDigits0', config.card_digits);
+                this.sendKeys('input#pinsentryCode0', part1);
+                this.sendKeys('input#pinsentryCode1', part2);
+            }
+            this.click('button[title="Log in to Online Banking"]');
+        }, function loginStageTwoTimeout() {
+            this.capture("login-error.png");
+            this.debugHTML();
+            this.die("Login stage 2 timeout. Screenshot saved to login-error.png.", 2);
+        }, 10000);
     });
 
     casper.then(function completeLogin() {
