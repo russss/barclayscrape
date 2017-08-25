@@ -152,30 +152,37 @@ function login(casper, loginOpts) {
 
 // Obtain a list of all accounts
 function fetchAccounts(casper, then) {
-    if (config.accounts) {
-        then(config.accounts);
-    } else {
-        casper.then(function fetchAccountList() {
-            var accounts = {};
-            var account_list = this.evaluate(function() {
-                var nodes = document.querySelectorAll("li.account");
-                var account_nodes = [].filter.call(nodes, function(node) {
-                    var product = node.getAttribute("data-product-class");
-                    // Filter to only include current and savings accounts
-                    return product == "CU" || product == "SV";
-                });
-                return [].map.call(account_nodes, function(node) {
-                    var id = node.id.substr(1);
-                    var product = node.querySelectorAll("span.edit-account-form")[0].getAttribute("data-product-identifier");
-                    return [id, product];
-                });
+    casper.then(function fetchAccountList() {
+        var fullAccounts = {};
+        var account_list = this.evaluate(function() {
+            var account_nodes = document.querySelectorAll("a#account-actions");
+            return [].map.call(account_nodes, function(node) {
+                var id = node.getAttribute("data-productindex");
+                var product = node.getAttribute("data-productid");
+                return [id, product];
             });
-            this.each(account_list, function (self, acct) {
-                accounts[acct[0]] = acct[1];
-            });
-            then(accounts);
         });
-    }
+        this.each(account_list, function (self, acct) {
+            fullAccounts[acct[1]] = {
+                number: acct[1],
+                name: acct[1],
+                idx: acct[0]
+            };
+        });
+        casper.log('Fetched accounts: ' + JSON.stringify(accounts), 'debug');
+        var accounts = {};
+        if (config.accounts) {
+            for (var accountName in config.accounts) {
+                var accountNumber = config.accounts[accountName];
+                accounts[accountNumber] = fullAccounts[accountNumber];
+                accounts[accountNumber].name = accountName;
+            }
+        } else {
+            accounts = fullAccounts;
+        }
+        casper.log('Named accounts: ' + JSON.stringify(accounts), 'debug');
+        then(accounts);
+    });
 }
 
 module.exports = {login: login};

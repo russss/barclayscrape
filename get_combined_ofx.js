@@ -1,5 +1,5 @@
 #!/usr/bin/env casperjs
-// Download a combined .ofx file of all accounts into all.ofx.
+// Download a combined .ofx file of all accounts into export/all.ofx.
 var casper = require('casper').create({
     verbose: false,
     //logLevel: 'debug',
@@ -45,7 +45,8 @@ function doDownload() {
     casper.waitForSelector("input#data-download", function downloadOFXFile() {
         requestid = casper.getElementAttribute('form.process-form input[name="requestid"]', "value");
         var url = "https://bank.barclays.co.uk/olb/balances/ExportDataStep2All.action";
-        this.download(url, 'all.ofx', 'POST', {'requestid': requestid,
+        this.echo("Downloading all.ofx");
+        this.download(url, 'export/all.ofx', 'POST', {'requestid': requestid,
                                                'requesttoken': '',
                                                'action:ExportDataStep2All_download': 'Download'});
         casper.log("Statement for all accounts downloaded to all.ofx", "INFO");
