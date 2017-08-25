@@ -7,9 +7,9 @@ At the moment it supports:
 * Fetching a list of accounts
 * `get_ofx.js` uses the export function to fetch an .ofx
 file for each of your bank accounts (assuming there are
-transactions available) into the current directory.
+transactions available) into the `export` directory
 * `get_combined_ofx.js` fetches a combined .ofx file of all
-available transactions for all accounts into `all.ofx` in the current
+available transactions for all accounts into `all.ofx` in the `export`
 directory.
 * `export_csv.js` parses HTML statements into a CSV
 file for each of your bank accounts and saves them into the `export`
@@ -47,7 +47,7 @@ be using the PINSentry card reader and will also need:
 * `card_digits` (last digits of your authentication card)
 
 If you know your account numbers, want to limit the exported files
-and give them aliases for readability, you can set:
+and give the exported files aliases for readability, you can set:
 
 * `accounts` an object e.g:
 

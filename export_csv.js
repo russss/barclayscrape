@@ -1,7 +1,7 @@
 #!/usr/bin/env casperjs
 var casper = require('casper').create({
     verbose: true,
-    logLevel: "error",
+    // logLevel: "debug",
     pageSettings: {
         webSecurityEnabled: false
     }
@@ -9,10 +9,10 @@ var casper = require('casper').create({
 var barclayscrape = require("./barclayscrape");
 casper.start();
 
-function parseHtml(accountName, accountNumber) {
-    var page = 'https://bank.barclays.co.uk/olb/balances/SeeStatementsDirect.action?productIdentifier=' + accountNumber;
+function parseHtml(account) {
+    var page = 'https://bank.barclays.co.uk/olb/balances/SeeStatementsDirect.action?productIdentifier=' + account.number;
     casper.thenOpen(page, function openAccount() {
-        // this.echo('Opened statement for: ' + accountNumber, "DEBUG");
+        // this.echo('Opened statement for: ' + account.number, "DEBUG");
         this.then(function openAccountThen () {
             var res = this.evaluate(function parseStatement() {
                 var txns = {};
@@ -80,13 +80,13 @@ function parseHtml(accountName, accountNumber) {
                 return txn_list;
             });
             var statement = [].slice.call(res);
-            writeCsv(accountName, accountNumber, statement);
+            writeCsv(account, statement);
         });
     });
 }
 
-function writeCsv(accountName, accountNumber, statement) {
-    var filename = accountName + '.csv';
+function writeCsv(account, statement) {
+    var filename = account.name + '.csv';
     var csvLines = statement.map(function (d) {
         var ref = '';
         if (d.ref) {
@@ -100,15 +100,18 @@ function writeCsv(accountName, accountNumber, statement) {
     
     csvLines.unshift('Date,Reference,Amount');
     require('fs').write('export/' + filename, [].join.call(csvLines, '\n'), 'w');
-    casper.echo("Exporting " + accountName + " account: " + accountNumber + " (" + (csvLines.length - 1) + " rows)");
+    var extraLog = '';
+    if (account.name != account.number) {
+        extraLog = ' (' + account.number + ')'
+    }
+    casper.echo("Exporting " + account.name + extraLog + " (" + (csvLines.length - 1) + " rows)");
 }
 
 barclayscrape.login(casper, {
     onAccounts: function (accounts) {
         // Iterate through each account and export it
-        for (var accountName in accounts) {
-            var accountNumber = accounts[accountName];
-            parseHtml(accountName, accountNumber);
+        for (var accountNumber in accounts) {
+            parseHtml(accounts[accountNumber]);
         }
     }
 });
