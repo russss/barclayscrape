@@ -49,9 +49,17 @@ function login(casper, loginOpts) {
 
         // 2017-08 update: This needs a selector for the passcode/memorable word login method adding
         // (comma-separated list):
-        this.waitForSelector('input#lastDigits0', function loginStageTwo() {
+        this.waitForSelector('input#radio-c3,input#radio-c4', function loginStageTwoA() {
             this.log("Login stage 2");
-            
+
+            if (loginOpts.motp) {
+                this.click('input#radio-c3');
+            } else {
+                this.click('input#radio-c4');
+            }
+        });
+
+        this.waitForSelector('input#pinsentryCode0,input#mobilePinsentryCode0', function loginStageTwo() {
             // log in via passcode and memorable password
             if (loginOpts.pcode && loginOpts.mcode) {
                 // 2017-08 update: This will need updating for the new form (which I can't see)
@@ -98,9 +106,14 @@ function login(casper, loginOpts) {
                     this.die("Could not find option to log in via memorable password. Check your account is setup to allow this.. Screenshot saved to login-error.png.", 2);
                 }
             } else {
-                this.sendKeys('input#lastDigits0', config.card_digits);
-                this.sendKeys('input#pinsentryCode0', part1);
-                this.sendKeys('input#pinsentryCode1', part2);
+                if (loginOpts.motp) {
+                    this.sendKeys('input#mobilePinsentryCode0', part1);
+                    this.sendKeys('input#mobilePinsentryCode1', part2);
+                } else {
+                    this.sendKeys('input#lastDigits0', config.card_digits);
+                    this.sendKeys('input#pinsentryCode0', part1);
+                    this.sendKeys('input#pinsentryCode1', part2);
+                }
             }
             this.click('button[title="Log in to Online Banking"]');
         }, function loginStageTwoTimeout() {
