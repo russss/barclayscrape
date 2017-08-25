@@ -32,7 +32,7 @@ Prerequisites
 -------------
 
 * [Phantomjs](http://phantomjs.org/) 1.9
-* [Casperjs](http://casperjs.readthedocs.org/) 1.1
+* [Casperjs](http://casperjs.readthedocs.org/) 1.4
 
 Configuration
 -------------
