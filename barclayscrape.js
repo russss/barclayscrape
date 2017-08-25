@@ -38,7 +38,6 @@ function login(casper, loginOpts) {
             this.die("Please provide card_digits, plus either otp or motp (or pcode and mcode)", 3);
         }
 
-
         this.waitForSelector('input#membershipNum0', function loginStageOneA() {
             this.fill('form[name="loginStep1"]', {
                 'surname': config.surname,
@@ -49,19 +48,27 @@ function login(casper, loginOpts) {
 
         // 2017-08 update: This needs a selector for the passcode/memorable word login method adding
         // (comma-separated list):
-        this.waitForSelector('input#radio-c3,input#radio-c4', function loginStageTwoA() {
+        this.waitForSelector('input#radio-c3,input#radio-c4,input#pinsentryCode0,input#mobilePinsentryCode0',
+                                function loginStageTwoA() {
+            // This is either the login screen, or a page to select the login method
             this.log("Login stage 2");
 
+            // Select the login method
             if (loginOpts.motp) {
-                this.click('input#radio-c3');
+                if (this.exists("input#radio-c3")) {
+                    this.click('input#radio-c3');
+                }
             } else {
-                this.click('input#radio-c4');
+                if (this.exists("input#radio-c4")) {
+                    this.click('input#radio-c4');
+                }
             }
         });
 
         this.waitForSelector('input#pinsentryCode0,input#mobilePinsentryCode0', function loginStageTwo() {
-            // log in via passcode and memorable password
+            // This is the main login screen.
             if (loginOpts.pcode && loginOpts.mcode) {
+                // log in via passcode and memorable password
                 // 2017-08 update: This will need updating for the new form (which I can't see)
                 this.log("Attempting to log in non-interactively");
                 if (this.exists("fieldset.letter-select legend strong")) {
