@@ -27,6 +27,14 @@ function login(casper, loginOpts) {
     });
     casper.thenOpen('https://bank.barclays.co.uk/olb/authlogin/loginAppContainer.do', function loginStageOne() {
         this.log("Login stage 1");
+
+        if (!("surname" in config) || config.surname == "") {
+            this.die("Please provide the surname field in the config")
+        }
+        if (!("membership_number" in config) || config.membership_number == "") {
+            this.die("Please provide the membership_number field in the config.")
+        }
+
         var part1, part2;
         if (loginOpts.motp) {
             part1 = loginOpts.motp.slice(0, 4);
