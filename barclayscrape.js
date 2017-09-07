@@ -29,10 +29,10 @@ function login(casper, loginOpts) {
         this.log("Login stage 1");
 
         if (!("surname" in config) || config.surname == "") {
-            this.die("Please provide the surname field in the config")
+            this.die("Please provide the surname field in the config");
         }
         if (!("membership_number" in config) || config.membership_number == "") {
-            this.die("Please provide the membership_number field in the config.")
+            this.die("Please provide the membership_number field in the config.");
         }
 
         var part1, part2;
@@ -53,39 +53,26 @@ function login(casper, loginOpts) {
             });
             this.click('button[title="Next Step"]');
         });
-
-        // 2017-08 update: This needs a selector for the passcode/memorable word login method adding
-        // (comma-separated list):
-        this.waitForSelector('input#radio-c3,input#radio-c4,input#pinsentryCode0,input#mobilePinsentryCode0',
-                                function loginStageTwoA() {
-            // This is either the login screen, or a page to select the login method
-            this.log("Login stage 2");
-
-            // Select the login method
-            if (loginOpts.motp) {
-                if (this.exists("input#radio-c3")) {
-                    this.click('input#radio-c3');
-                }
-            } else {
-                if (this.exists("input#radio-c4")) {
-                    this.click('input#radio-c4');
-                }
-            }
-        });
-
-        this.waitForSelector('input#pinsentryCode0,input#mobilePinsentryCode0', function loginStageTwo() {
-            // This is the main login screen.
-            if (loginOpts.pcode && loginOpts.mcode) {
-                // log in via passcode and memorable password
-                // 2017-08 update: This will need updating for the new form (which I can't see)
-                this.log("Attempting to log in non-interactively");
-                if (this.exists("fieldset.letter-select legend strong")) {
+        
+        // log in via passcode and memorable password
+        if (loginOpts.pcode && loginOpts.mcode) {
+            var chars = [];
+            
+            this.log("Login stage 2 - Passcode and Memoerable word");
+            
+            // select passcode radio button as authentication method
+            this.waitForSelector("div.row.selectRadio span.radio-control:nth-of-type(2)", function() {
+                this.click("div.row.selectRadio span.radio-control:nth-of-type(2)");
+            });
+            
+            this.waitUntilVisible('input#passcode0', function loginStageOneB() {
+                if (this.waitUntilVisible("label#label-memorableCharacters", function loginStageOneB_DetectPasscodeIndices() {
                     // parse the two requested indices (ie, "1st " and "12th") from memorable password
                     var indices = this.evaluate(function getIndices() {
                         var digits = /^[0-9]{1,2}/;
                         return [
-                            document.querySelector("fieldset.letter-select legend strong:nth-of-type(1)").innerText.match(digits),
-                            document.querySelector("fieldset.letter-select legend strong:nth-of-type(2)").innerText.match(digits)
+                            document.querySelector("label#label-memorableCharacters strong:nth-of-type(1)").innerText.match(digits),
+                            document.querySelector("label#label-memorableCharacters strong:nth-of-type(2)").innerText.match(digits)
                         ];
                     });
                     
@@ -102,25 +89,57 @@ function login(casper, loginOpts) {
                             this.die("Requested char: "+ indices[i].toString() +" exceeded length of supplied mcode: "+loginOpts.mcode.length.toString()+". Screenshot saved to login-error.png.", 2);
                         }
                     }
-                    
+        
                     // extract the two requested characters from memorable password
-                    var chars = [loginOpts.mcode.substring(indices[0], indices[0]+1), loginOpts.mcode.substring(indices[1],indices[1]+1)];
-                    if (this.exists('#passcode-radio')) {
-                        this.click("#passcode-radio");
-                    }
-                    this.fill('form#accordion-bottom-form', {
-                        'passcode': loginOpts.pcode,
-                        'firstMemorableCharacter': chars[0],
-                        'secondMemorableCharacter': chars[1]
+                    chars = [loginOpts.mcode.substring(indices[0], indices[0]+1), loginOpts.mcode.substring(indices[1],indices[1]+1)];
+                }, function () {
+                    this.die("Was unable to determine passcode character indices");
+                }));
+                
+                this.waitForSelector('input#passcode0, input[name="firstMemorableCharacter"], input[name="secondMemorableCharacter"]', function loginStageOneB_Passcode() {
+                    this.sendKeys('input#passcode0', loginOpts.pcode);
+                });
+            
+                this.waitForSelector('input[name="firstMemorableCharacter"]', function loginStageOneB_Char1() {
+                    this.click("div.dropdown.firstMemorableCharacter");
+                    this.waitForSelector("div.dropdown.firstMemorableCharacter div.dropdown__options-list.closed", function () {
+                        this.sendKeys('div.dropdown.firstMemorableCharacter', chars[0]);
                     });
-                    this.click('button#log-in-to-online-banking2');
+                });
+                
+                this.waitForSelector('input[name="secondMemorableCharacter"]', function loginStageOneB_Char2() {
+                    this.click("div.dropdown.secondMemorableCharacter");
+                    this.waitForSelector('div.dropdown.secondMemorableCharacter', function () {
+                        this.sendKeys('div.dropdown.secondMemorableCharacter', chars[1]);
+                        this.capture('debug-post.png');
+                        this.waitForSelector("div.dropdown.secondMemorableCharacter div.dropdown__options-list.closed", function () {
+                            this.click('button[title="Log in to Online Banking"]');
+                        });
+                    });
+                });
+            });
+        }
+        else
+        {
+            // login via PIN sentry
+            this.waitForSelector('input#radio-c3,input#radio-c4,input#pinsentryCode0,input#mobilePinsentryCode0', function loginStageTwoA() {
+                // This is either the login screen, or a page to select the login method
+                this.log("Login stage 2 - PINSentry");
+
+                // Select the login method
+                if (loginOpts.motp) {
+                    if (this.exists("input#radio-c3")) {
+                        this.click('input#radio-c3');
+                    }
+                } else {
+                    if (this.exists("input#radio-c4")) {
+                        this.click('input#radio-c4');
+                    }
                 }
-                else
-                {
-                    this.capture("login-error.png");
-                    this.die("Could not find option to log in via memorable password. Check your account is setup to allow this.. Screenshot saved to login-error.png.", 2);
-                }
-            } else {
+            });
+
+            this.waitForSelector('input#pinsentryCode0,input#mobilePinsentryCode0', function loginStageTwo() {
+                // This is the main login screen.
                 if (loginOpts.motp) {
                     this.sendKeys('input#mobilePinsentryCode0', part1);
                     this.sendKeys('input#mobilePinsentryCode1', part2);
@@ -129,13 +148,13 @@ function login(casper, loginOpts) {
                     this.sendKeys('input#pinsentryCode0', part1);
                     this.sendKeys('input#pinsentryCode1', part2);
                 }
-            }
-            this.click('button[title="Log in to Online Banking"]');
-        }, function loginStageTwoTimeout() {
-            this.capture("login-error.png");
-            this.debugHTML();
-            this.die("Login stage 2 timeout. Screenshot saved to login-error.png.", 2);
-        }, 10000);
+                this.click('button[title="Log in to Online Banking"]');
+            }, function loginStageTwoTimeout() {
+                this.capture("login-error.png");
+                this.debugHTML();
+                this.die("Login stage 2 timeout. Screenshot saved to login-error.png.", 2);
+            }, 10000);
+        }
     });
 
     casper.then(function completeLogin() {
