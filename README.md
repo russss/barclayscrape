@@ -102,3 +102,7 @@ a tool to generate a one-time password on the command line. It can be
 hooked up to barclayscrape like so:
 
     $ ./get_ofx.js --otp=`emvtool -p <PIN> cap`
+
+Please be aware that if you're putting this command into cron, any error
+emails will include your PIN in the subject line. It's worth using a small
+shell script to prevent this.
