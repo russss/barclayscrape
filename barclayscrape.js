@@ -157,24 +157,35 @@ function login(casper, loginOpts) {
         }
     });
 
-    casper.then(function completeLogin() {
-        this.log("Waiting to be logged in", "debug");
-        this.waitForSelector('a#logout', function waitForLogin() {
-            this.echo("Successfully logged in", "INFO");
-            if (loginOpts.onLogin) {
-                loginOpts.onLogin();
-            }
-            if (loginOpts.onAccounts) {
-                fetchAccounts(this, loginOpts.onAccounts);
-            }
-        }, function loginTimeout(response) {
-            this.capture("login-error.png");
-            this.echo("Surname: " + config.surname);
-            this.echo("Membership number: " + config.membership_number);
-            this.echo("Card digits: " + config.card_digits);
-            this.die("Login timeout. Check credentials. Screenshot saved to login-error.png.", 2);
-        }, 10002);
-    });
+  casper.then(function completeLogin() {
+    this.log("Waiting to be logged in", "debug");
+    this.waitForSelector('a#logout', function waitForLogin() {
+      this.echo("Successfully logged in", "INFO");
+      if (loginOpts.onLogin) {
+        loginOpts.onLogin();
+      }
+      if (loginOpts.onAccounts) {
+        fetchAccounts(this, loginOpts.onAccounts);
+      }
+    }, function loginTimeout(response) {
+      this.click('button[title="Log in to Online Banking"]');
+      this.waitForSelector('a#logout', function waitForLogin() {
+        this.echo("Successfully logged in", "INFO");
+        if (loginOpts.onLogin) {
+          loginOpts.onLogin();
+        }
+        if (loginOpts.onAccounts) {
+          fetchAccounts(this, loginOpts.onAccounts);
+        }
+      }, function loginTimeoutTwo(response) {
+        this.capture("login-error.png");
+        this.echo("Surname: " + config.surname);
+        this.echo("Membership number: " + config.membership_number);
+        this.echo("Card digits: " + config.card_digits);
+        this.die("Login timeout. Check credentials. Screenshot saved to login-error.png.", 2);
+      }, 5000);
+    }, 5000);
+  });
 }
 
 // Obtain a list of all accounts
