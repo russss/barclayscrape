@@ -2,10 +2,15 @@ var config = require("./config");
 
 function initErrorHandlers(casper) {
     casper.on("resource.error", function(resourceError){
+        var level = 'error';
+        if (resourceError.errorCode == 5) {
+            // Operation Cancelled. This appears to be benign.
+            level = 'info';
+        }
         this.log('Unable to load resource (error #' + resourceError.id + 
-                    ' URL: ' + resourceError.url + ')', 'error');
+                    ' URL: ' + resourceError.url + ')', level);
         this.log('Error code: ' + resourceError.errorCode + 
-                 '. Description: ' + resourceError.errorString, 'error');
+                 '. Description: ' + resourceError.errorString, level);
     });
 
     casper.on('error', function(msg, backtrace) {
@@ -23,10 +28,14 @@ function initErrorHandlers(casper) {
     });
 
     casper.on('waitFor.timeout', function(timeout, details) {
-        this.capture('waitfor-timeout.png');
         if ('selector' in details) {
+            if (details['selector'] == "a.export") {
+                // This is an expected timeout and an ugly way to handle it.
+                return;
+            }
             this.log("Timeout waiting for " + details.selector, "error")
         }
+        this.capture('waitfor-timeout.png');
         this.log("Screenshot saved to waitfor-timeout.png.", "error");
     });
 }
