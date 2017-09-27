@@ -15,23 +15,10 @@ directory.
 file for each of your bank accounts and saves them into the `export`
 directory.
 
-Version 2
----------
-Owing to Barclays' recent move to using an AJAX-powered login system, I
-have had to rewrite this code from Ruby/Mechanize to CasperJS. This
-automates the site using a headless web browser, and the new code relies
-less on the position of objects within the page.
-
-This new code should be more future-proof against online banking
-changes.
-
-The old Ruby version can be found in the barclayscrape-1
-branch.
-
 Prerequisites
 -------------
 
-* [Phantomjs](http://phantomjs.org/) 1.9
+* [Phantomjs](http://phantomjs.org/) 1.9.8
 * [Casperjs](http://casperjs.readthedocs.org/) 1.1.4
 
 Configuration
@@ -106,3 +93,11 @@ hooked up to barclayscrape like so:
 Please be aware that if you're putting this command into cron, any error
 emails will include your PIN in the subject line. It's worth using a small
 shell script to prevent this.
+
+Security Notes
+--------------
+
+* Do not be tempted to set the PhantomJS option to ignore certificate errors.
+  This leaves **your banking data** subject to man-in-the-middle attacks.
+* If you're changing this code please don't leave debugHTML() calls in it
+  when submitting pull requests. This can leak privileged data into cron emails.
