@@ -181,7 +181,6 @@ function login(casper, loginOpts) {
                 this.click('button[title="Log in to Online Banking"]');
             }, function loginStageTwoTimeout() {
                 this.capture("login-error.png");
-                this.debugHTML();
                 this.die("Login stage 2 timeout. Screenshot saved to login-error.png.", 2);
             }, 10000);
         }
