@@ -1,6 +1,38 @@
 var config = require("./config");
 
+function initErrorHandlers(casper) {
+    casper.on("resource.error", function(resourceError){
+        this.log('Unable to load resource (error #' + resourceError.id + 
+                    ' URL: ' + resourceError.url + ')', 'error');
+        this.log('Error code: ' + resourceError.errorCode + 
+                 '. Description: ' + resourceError.errorString, 'error');
+    });
+
+    casper.on('error', function(msg, backtrace) {
+        this.capture('error.png');
+        this.die(msg, 1);
+    });
+
+    casper.on('remote.message', function(msg) {
+        this.log('console message: ' + msg, 'debug');
+    });
+
+    casper.on("page.error", function(msg, backtrace) {
+        this.log('JS error: ' + msg, 'debug');
+        this.log(JSON.stringify(backtrace), 'debug');
+    });
+
+    casper.on('waitFor.timeout', function(timeout, details) {
+        this.capture('waitfor-timeout.png');
+        if ('selector' in details) {
+            this.log("Timeout waiting for " + details.selector, "error")
+        }
+        this.log("Screenshot saved to waitfor-timeout.png.", "error");
+    });
+}
+
 function login(casper, loginOpts) {
+    initErrorHandlers(casper);
     loginOpts = loginOpts || {};
     if (casper.cli.has("otp")) {
         loginOpts.otp = String(casper.cli.get('otp'));
@@ -12,20 +44,9 @@ function login(casper, loginOpts) {
         loginOpts.motp = require('system').stdin.readLine();
     }
 
-    casper.on('error', function(msg, backtrace) {
-        this.capture('error.png');
-        this.die(msg, 1);
-    });
     casper.userAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.49 Safari/537.36');
 
-    casper.on('remote.message', function(msg) {
-        this.log('console message: ' + msg, 'debug');
-    });
-    casper.on("page.error", function(msg, backtrace) {
-        this.log('JS error: ' + msg, 'debug');
-        this.log(JSON.stringify(backtrace), 'debug');
-    });
-    casper.thenOpen('https://bank.barclays.co.uk/olb/authlogin/loginAppContainer.do', function loginStageOne() {
+    casper.thenOpen('https://bank.barclays.co.uk/olb/authlogin/loginAppContainer.do#/identification', function loginStageOne() {
         this.log("Login stage 1");
 
         if (!("surname" in config) || config.surname == "") {
