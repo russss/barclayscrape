@@ -152,7 +152,8 @@ function login(casper, loginOpts) {
         else
         {
             // login via PIN sentry
-            this.waitForSelector('input#radio-c3,input#radio-c4,input#pinsentryCode0,input#mobilePinsentryCode0', function loginStageTwoA() {
+            var waitForSelectorStageTwoA = loginOpts.motp ? 'input#radio-c3' : 'input#radio-c4';
+            this.waitForSelector(waitForSelectorStageTwoA, function loginStageTwoA() {
                 // This is either the login screen, or a page to select the login method
                 this.log("Login stage 2 - PINSentry");
 
@@ -168,7 +169,8 @@ function login(casper, loginOpts) {
                 }
             });
 
-            this.waitForSelector('input#pinsentryCode0,input#mobilePinsentryCode0', function loginStageTwo() {
+            var waitForSelectorStageTwo = loginOpts.motp ? 'input#mobilePinsentryCode0' : 'input#pinsentryCode0';
+            this.waitForSelector(waitForSelectorStageTwo, function loginStageTwo() {
                 // This is the main login screen.
                 if (loginOpts.motp) {
                     this.sendKeys('input#mobilePinsentryCode0', part1);
