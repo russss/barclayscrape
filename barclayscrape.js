@@ -176,8 +176,7 @@ function login(casper, loginOpts) {
                 }
                 this.click('button[title="Log in to Online Banking"]');
             }, function loginStageTwoTimeout() {
-                this.capture("login-error.png");
-                this.die("Login stage 2 timeout. Screenshot saved to login-error.png.", 2);
+                this.die("Login stage 2 timeout.", 2);
             }, 10000);
         }
     });
@@ -203,11 +202,10 @@ function login(casper, loginOpts) {
           fetchAccounts(this, loginOpts.onAccounts);
         }
       }, function loginTimeoutTwo(response) {
-        this.capture("login-error.png");
         this.echo("Surname: " + config.surname);
         this.echo("Membership number: " + config.membership_number);
         this.echo("Card digits: " + config.card_digits);
-        this.die("Login timeout. Check credentials. Screenshot saved to login-error.png.", 2);
+        this.die("Login timeout. Check credentials.", 2);
       }, 5000);
     }, 5000);
   });
