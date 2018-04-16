@@ -158,14 +158,8 @@ function login(casper, loginOpts) {
                 this.log("Login stage 2 - PINSentry");
 
                 // Select the login method
-                if (loginOpts.motp) {
-                    if (this.exists("input#radio-c3")) {
-                        this.click('input#radio-c3');
-                    }
-                } else {
-                    if (this.exists("input#radio-c4")) {
-                        this.click('input#radio-c4');
-                    }
+                if (this.exists(waitForSelectorStageTwoA)) {
+                    this.click(waitForSelectorStageTwoA);
                 }
             });
 
