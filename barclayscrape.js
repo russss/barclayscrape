@@ -152,7 +152,8 @@ function login(casper, loginOpts) {
         else
         {
             // login via PIN sentry
-            var waitForSelectorStageTwoA = loginOpts.motp ? 'input#radio-c3' : 'input#radio-c4';
+            var waitForSelectorStageTwoA = '[ng-controller="authTFACtrl"] ' +
+                (loginOpts.motp ? 'input#radio-c3' : 'input#radio-c4');
             this.waitForSelector(waitForSelectorStageTwoA, function loginStageTwoA() {
                 // This is either the login screen, or a page to select the login method
                 this.log("Login stage 2 - PINSentry");
