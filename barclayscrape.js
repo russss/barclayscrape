@@ -88,7 +88,7 @@ function login(casper, loginOpts) {
         if (loginOpts.pcode && loginOpts.mcode) {
             var chars = [];
             
-            this.log("Login stage 2 - Passcode and Memoerable word");
+            this.log("Login stage 2 - Passcode and Memorable word");
             
             // select passcode radio button as authentication method
             this.waitForSelector("div.row.selectRadio span.radio-control:nth-of-type(2)", function() {
