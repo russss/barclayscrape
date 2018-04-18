@@ -88,7 +88,7 @@ function login(casper, loginOpts) {
         if (loginOpts.pcode && loginOpts.mcode) {
             var chars = [];
             
-            this.log("Login stage 2 - Passcode and Memorable word");
+            this.log("Login stage 2 - Passcode and Memoerable word");
             
             // select passcode radio button as authentication method
             this.waitForSelector("div.row.selectRadio span.radio-control:nth-of-type(2)", function() {
@@ -152,20 +152,23 @@ function login(casper, loginOpts) {
         else
         {
             // login via PIN sentry
-            var waitForSelectorStageTwoA = '[ng-controller="authTFACtrl"] ' +
-                (loginOpts.motp ? 'input#radio-c3' : 'input#radio-c4');
-            this.waitForSelector(waitForSelectorStageTwoA, function loginStageTwoA() {
+            this.waitForSelector('input#radio-c3,input#radio-c4,input#pinsentryCode0,input#mobilePinsentryCode0', function loginStageTwoA() {
                 // This is either the login screen, or a page to select the login method
                 this.log("Login stage 2 - PINSentry");
 
                 // Select the login method
-                if (this.exists(waitForSelectorStageTwoA)) {
-                    this.click(waitForSelectorStageTwoA);
+                if (loginOpts.motp) {
+                    if (this.exists("input#radio-c3")) {
+                        this.click('input#radio-c3');
+                    }
+                } else {
+                    if (this.exists("input#radio-c4")) {
+                        this.click('input#radio-c4');
+                    }
                 }
             });
 
-            var waitForSelectorStageTwo = loginOpts.motp ? 'input#mobilePinsentryCode0' : 'input#pinsentryCode0';
-            this.waitForSelector(waitForSelectorStageTwo, function loginStageTwo() {
+            this.waitForSelector('input#pinsentryCode0,input#mobilePinsentryCode0', function loginStageTwo() {
                 // This is the main login screen.
                 if (loginOpts.motp) {
                     this.sendKeys('input#mobilePinsentryCode0', part1);
@@ -177,7 +180,8 @@ function login(casper, loginOpts) {
                 }
                 this.click('button[title="Log in to Online Banking"]');
             }, function loginStageTwoTimeout() {
-                this.die("Login stage 2 timeout.", 2);
+                this.capture("login-error.png");
+                this.die("Login stage 2 timeout. Screenshot saved to login-error.png.", 2);
             }, 10000);
         }
     });
@@ -203,10 +207,11 @@ function login(casper, loginOpts) {
           fetchAccounts(this, loginOpts.onAccounts);
         }
       }, function loginTimeoutTwo(response) {
+        this.capture("login-error.png");
         this.echo("Surname: " + config.surname);
         this.echo("Membership number: " + config.membership_number);
         this.echo("Card digits: " + config.card_digits);
-        this.die("Login timeout. Check credentials.", 2);
+        this.die("Login timeout. Check credentials. Screenshot saved to login-error.png.", 2);
       }, 5000);
     }, 5000);
   });
