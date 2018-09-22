@@ -53,7 +53,7 @@ function login(casper, loginOpts) {
         loginOpts.motp = require('system').stdin.readLine();
     }
 
-    casper.userAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.49 Safari/537.36');
+    casper.userAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.22 Safari/537.36');
 
     casper.thenOpen('https://bank.barclays.co.uk/olb/authlogin/loginAppContainer.do#/identification', function loginStageOne() {
         this.log("Login stage 1");
