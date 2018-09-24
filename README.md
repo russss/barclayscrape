@@ -10,9 +10,18 @@ Barclayscrape requires node.js version 10 or above which can be
 installed through your OS's package manager or Homebrew. Once Node
 is installed, barclayscrape can be installed on your system using:
 
-    $ npm install -g barclayscrape
+    $ sudo npm install -g barclayscrape
 
 The `barclayscrape` executable will be installed in your path.
+
+Alternatively, if you don't want to run npm as root, you can install
+it into `node_modules` in your home directory with:
+
+    $ npm install barclayscrape
+
+And you can then execute barclayscrape with:
+
+    $ npx barclayscrape
 
 Usage
 -----

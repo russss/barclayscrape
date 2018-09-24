@@ -14,7 +14,7 @@ const session = require('./session.js');
 const conf = new Configstore(pkg.name);
 
 program
-  .version('3.0.1')
+  .version(pkg.version)
   .description('Programmatic access to Barclays online banking.')
   .option('--otp [pin]', 'PINSentry code')
   .option('--motp [pin]', 'Mobile PINSentry code')
