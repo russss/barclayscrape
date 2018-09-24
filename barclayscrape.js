@@ -14,7 +14,7 @@ const session = require('./session.js');
 const conf = new Configstore(pkg.name);
 
 program
-  .version('3.0.0')
+  .version('3.0.1')
   .description('Programmatic access to Barclays online banking.')
   .option('--otp [pin]', 'PINSentry code')
   .option('--motp [pin]', 'Mobile PINSentry code')
@@ -91,7 +91,14 @@ async function auth() {
     program.help();
   }
 
-  const sess = await session.launch({headless: program.headless});
+  // The --no-sandbox argument is required here for this to run on certain kernels
+  // and containerised setups. My understanding is that disabling sandboxing shouldn't
+  // cause a security issue as we're only using one tab anyway.
+  const sess = await session.launch({
+    headless: program.headless,
+    args: ['--no-sandbox'],
+  });
+
   if (program.otp) {
     await sess.loginOTP({
       surname: conf.get('surname'),
