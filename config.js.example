@@ -1,6 +1,0 @@
-module.exports = {
-    surname: "",
-    membership_number: "",
-    card_digits: "",
-    accounts: null
-};
