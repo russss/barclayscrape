@@ -71,7 +71,7 @@ The [python-emv](https://github.com/russss/python-emv) package contains
 a tool to generate a one-time password on the command line. It can be
 hooked up to barclayscrape like so:
 
-    $ barclayscrape --otp=`emvtool -p <PIN> cap` get_ofx ./output/
+    $ barclayscrape --otp `emvtool -p <PIN> cap` get_ofx ./output/
 
 Please be aware that if you're putting this command into cron, any error
 emails will include your PIN in the subject line. It's worth using a small
