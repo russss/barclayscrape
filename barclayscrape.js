@@ -27,6 +27,12 @@ program
     var sess;
     try {
       sess = await auth();
+    } catch (err) {
+      console.error(err);
+      return;
+    }
+
+    try {
       const accounts = await sess.accounts();
       console.table(accounts.map(acc => acc.number));
     } catch (err) {
@@ -43,6 +49,12 @@ program
     var sess;
     try {
       sess = await auth();
+    } catch (err) {
+      console.error(err);
+      return;
+    }
+
+    try {
       const accounts = await sess.accounts();
       for (let account of accounts) {
         const ofx = await account.statementOFX();
@@ -50,7 +62,6 @@ program
           await fs_writeFile(path.join(out_path, account.number) + '.ofx', ofx);
         }
       }
-      await sess.close();
     } catch (err) {
       console.error(err);
     } finally {
@@ -64,7 +75,12 @@ program
   .action(options => {
     var surname = prompt('Enter your surname: ');
     conf.set('surname', surname);
-    var num = prompt('Enter your online banking membership number: ');
+    do {
+      var num = prompt('Enter your online banking membership number: ');
+      if (num.length != 12) {
+        console.log('Membership number should be 12 digits');
+      }
+    } while (num.length != 12);
     conf.set('membershipno', num);
     console.log(
       "\nIf you're going to be logging in using PinSentry, please enter the last few\n" +
@@ -91,6 +107,16 @@ async function auth() {
     program.help();
   }
 
+  if (program.otp && program.otp.length != 8) {
+    console.error('OTP should be 8 characters long');
+    program.help();
+  }
+
+  if (program.motp && program.motp.length != 8) {
+    console.error('MOTP should be 8 characters long');
+    program.help();
+  }
+
   // The --no-sandbox argument is required here for this to run on certain kernels
   // and containerised setups. My understanding is that disabling sandboxing shouldn't
   // cause a security issue as we're only using one tab anyway.
@@ -99,19 +125,26 @@ async function auth() {
     args: ['--no-sandbox'],
   });
 
-  if (program.otp) {
-    await sess.loginOTP({
-      surname: conf.get('surname'),
-      membershipno: conf.get('membershipno'),
-      card_digits: conf.get('card_digits'),
-      otp: program.otp,
-    });
-  } else if (program.motp) {
-    await sess.loginMOTP({
-      surname: conf.get('surname'),
-      membershipno: conf.get('membershipno'),
-      otp: program.motp,
-    });
+  try {
+    if (program.otp) {
+      await sess.loginOTP({
+        surname: conf.get('surname'),
+        membershipno: conf.get('membershipno'),
+        card_digits: conf.get('card_digits'),
+        otp: program.otp,
+      });
+    } else if (program.motp) {
+      await sess.loginMOTP({
+        surname: conf.get('surname'),
+        membershipno: conf.get('membershipno'),
+        otp: program.motp,
+      });
+    }
+  } catch (err) {
+    try {
+      await sess.close();
+    } catch (e) {}
+    throw err;
   }
   return sess;
 }
