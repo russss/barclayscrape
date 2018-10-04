@@ -26,6 +26,7 @@ module.exports = class Account {
         'No export option (probably no transactions) for account ' +
           this.number,
       );
+      await this.session.home();
       return null;
     }
 
