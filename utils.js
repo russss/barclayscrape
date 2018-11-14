@@ -1,16 +1,12 @@
 // Look for a warning on the page and raise it as an error.
 async function raiseWarning(page) {
-  const warningText = await page.$eval('.notification--warning', el => {
-    if (el) {
-      el.textContent;
-    }
-  });
-
-  console.log(warningText);
-
-  if (warningText) {
-    throw `Barclays Error: "${warningText.trim()}" (while fetching ${selector})`;
+  const sel = await page.$('.notification--warning');
+  if (!sel) {
+    return
   }
+
+  const warningText = await page.$eval(sel, el => el.textContent);
+  throw `Barclays Error: "${warningText.trim()}" (while fetching ${selector})`;
 }
 
 // Click a link and wait for the navigation state to go to idle.
