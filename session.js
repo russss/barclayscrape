@@ -29,6 +29,9 @@ class Session {
   async loginSelectMethod(method) {
     // Stage 2: If multiple auth methods are enabled for this account,
     // select the correct one.
+    
+    // Wait for the login button which hopefully means the page has loaded.
+    await u.wait(this.page, 'button[title="Log in to Online Banking"]')
     let selector = '[ng-controller="authTFACtrl"] ';
     if (method == 'motp') {
       selector += 'input#radio-c3';
@@ -38,7 +41,7 @@ class Session {
 
     const sel = await this.page.$(selector);
     if (sel) {
-      await u.click(this.page, selector);
+      await this.page.$eval(selector, el => el.click())
     }
   }
 
@@ -66,7 +69,7 @@ class Session {
   async loginMOTP(credentials) {
     // Log in using Mobile PinSentry.
     await this.loginStage1(credentials);
-    await this.selectMethod('motp');
+    await this.loginSelectMethod('motp');
     await u.wait(this.page, '#mobilePinsentryCode0');
     await u.fillFields(this.page, {
       '#mobilePinsentryCode0': credentials['motp'].slice(0, 4),

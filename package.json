@@ -1,6 +1,6 @@
 {
   "name": "barclayscrape",
-  "version": "3.0.3",
+  "version": "3.0.4",
   "description": "Programmatically manipulate Barclays online banking",
   "main": "barclayscrape.js",
   "bin": {
@@ -19,10 +19,10 @@
   "dependencies": {
     "commander": "^2.18.0",
     "configstore": "^4.0.0",
-    "puppeteer": "^1.8.0",
+    "puppeteer": "^1.10.0",
     "syncprompt": "^2.0.0"
   },
-  "engines" : {
-    "node" : ">=10.3.0" 
+  "engines": {
+    "node": ">=10.3.0"
   }
 }

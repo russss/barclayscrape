@@ -23,7 +23,7 @@ exports.click = async (page, selector) => {
       page.$eval(selector, el => el.click()),
     ]);
   } catch (err) {
-    throw `Error when clicking ${selector} on URL ${page.url()}`;
+    throw `Error when clicking ${selector} on URL ${page.url()}: ${err}`;
   }
 };
 

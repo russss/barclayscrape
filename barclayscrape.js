@@ -137,7 +137,7 @@ async function auth() {
       await sess.loginMOTP({
         surname: conf.get('surname'),
         membershipno: conf.get('membershipno'),
-        otp: program.motp,
+        motp: program.motp,
       });
     }
   } catch (err) {
