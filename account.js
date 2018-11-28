@@ -45,6 +45,83 @@ module.exports = class Account {
     return ofx;
   }
 
+  async statement() {
+    // Return a CSV-formatted string of the most recent account statement.
+    await this.select();
+    if (!(await this.page.$('table#filterable-ftb'))) {
+      console.log(
+        'No transactions for account ' +
+          this.number,
+      );
+      await this.session.home();
+      return [];
+    }
+
+    // Parse the transactions in the context of the page.
+    let transactions = await this.page.evaluate(() => {
+      let txns = {};
+      let txn_list = [];
+      let rows = document.querySelectorAll('table#filterable-ftb tbody tr');
+      if (rows.length) {
+          [].forEach.call(rows, function (row) {
+              if (row.id) {
+                  let row_id = row.id.replace(/transaction_(\d+).*/, '$1');
+                  let txd;
+                  txd = {};
+                  txn_list.push(txd);
+                  txns[row_id] = txd;
+                  txd['amount'] = row.querySelector('[headers=header-money-in]').innerText.trim()
+                      || row.querySelector('[headers=header-money-out]').innerText.trim();
+                  txd['description'] = row.querySelector('.description span').innerText.trim();
+                  txd['date'] = row.querySelector('[headers=header-date]').innerText.trim();
+                  txd['balance'] = row.querySelector('[headers=header-balance]').innerText.trim();
+                  let transType = row.querySelector('.description div.additional-data div');
+                  txd['trans-type'] = transType.innerText.trim();
+                  let refs = transType.nextSibling.textContent.split('\n');
+                  let refParts = [];
+                  refs.forEach(function (ref) {
+                      let refTrim = ref.trim();
+                      if (refTrim) {
+                          refParts.push(refTrim);
+                      }
+                  });
+                  txd['ref'] = refParts[0];
+                  txd['ref2'] = refParts[1];
+              }
+          });
+      }
+      return txn_list;
+    });
+
+    let statement = [].slice.call(transactions);
+    console.log('Fetched statement for account ' + this.number);
+
+    await this.session.home();
+    return statement;
+  }
+
+  async statementCSV() {
+    let statement  = await this.statement();
+    return this.csvLines(statement);
+  }
+
+  csvLines(statement) {
+    var csvLines = statement.map(function (d) {
+        var ref = '';
+        if (d.ref) {
+            ref = "-" + d.ref;
+            if (d.ref2) {
+                ref = ref + '-' + d.ref2;
+            }
+        }
+        return d['date'] + ',' + d['trans-type'].replace(/,/g, ';') + '-' + d['description'].replace(/,/g, ';') + ref + ',' + d['amount'].replace(/[£,]/g, '');
+    });
+    
+    csvLines.unshift('Date,Reference,Amount');
+    return csvLines;
+  }
+
+
   toString() {
     return '[Account ' + this.number + ']';
   }

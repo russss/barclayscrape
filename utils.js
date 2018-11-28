@@ -42,7 +42,7 @@ exports.wait = async (page, selector) => {
     raiseWarning(page);
 
     const screenshotFile = './error.png';
-    await page.screenshot(screenshotFile);
+    await page.screenshot({path: screenshotFile});
     throw `Couldn't find selector "${selector}" on page ${page.url()}. Screenshot saved to ${screenshotFile}.`;
   }
 };

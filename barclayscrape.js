@@ -34,7 +34,7 @@ program
 
     try {
       const accounts = await sess.accounts();
-      console.table(accounts.map(acc => acc.number));
+      console.table(accounts.map(acc => [acc.number, exportLabel(acc)]));
     } catch (err) {
       console.error(err);
     } finally {
@@ -59,7 +59,43 @@ program
       for (let account of accounts) {
         const ofx = await account.statementOFX();
         if (ofx) {
-          await fs_writeFile(path.join(out_path, account.number) + '.ofx', ofx);
+          await fs_writeFile(path.join(out_path, exportLabel(account)) + '.ofx', ofx);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      await sess.close();
+    }
+  });
+
+program
+  .command('csv')
+  .option('-p, --path', 'Export path')
+  .description('Fetch .ofx files for all accounts into out_path')
+  .action(async (options) => {
+    var sess;
+    try {
+      sess = await auth();
+    } catch (err) {
+      console.error(err);
+      return;
+    }
+
+    try {
+      const accounts = await sess.accounts();
+      for (let account of accounts) {
+        const csvLines = await account.statementCSV();
+        if (csvLines) {
+          var label = exportLabel(account);
+          var extraLog = '';
+          if (label != account.number) {
+              extraLog = ' (' + account.number + ')'
+          }
+          let csv = [].join.call(csvLines, '\n');
+          let out_path = options.path || 'export';
+          console.log("Exporting " + label + extraLog + " (" + (csvLines.length - 1) + " rows)");
+          await fs_writeFile(path.join(out_path, label) + '.csv', csv);
         }
       }
     } catch (err) {
@@ -89,10 +125,34 @@ program
     );
     var digits = prompt('Enter the last digits of your card number: ');
     conf.set('card_digits', digits);
+    console.log(
+      "\nIf you want to export statements with a friendly name instead of the account\n" +
+        "number, you can add aliases here.\n" +
+        "Press enter to continue if you don't need this or once you're finished.\n",
+    );
+    var account, alias;
+    var aliases = {};
+    while (true) {
+      account = prompt('Enter an account number: ');
+      if (!account) {
+        break;
+      }
+      alias = prompt('Enter friendly label: ');
+      if (!alias) {
+        break;
+      }
+      aliases[account] = alias;
+    }
+    conf.set('aliases', aliases);
     console.log('\nBarclayscrape is now configured.');
   });
 
 program.parse(process.argv);
+
+function exportLabel(account) {
+  let aliases = conf.get('aliases') || {};
+  return aliases[account.number] || account.number;
+}
 
 async function auth() {
   if (!(conf.has('surname') && conf.has('membershipno'))) {
@@ -113,8 +173,7 @@ async function auth() {
   }
 
   if (program.motp && program.motp.length != 8) {
-    console.error('MOTP should be 8 characters long');
-    program.help();
+    program.motp = prompt('Enter your 8 digit mobile PIN sentry code: ');
   }
 
   // The --no-sandbox argument is required here for this to run on certain kernels
