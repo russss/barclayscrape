@@ -34,7 +34,7 @@ program
 
     try {
       const accounts = await sess.accounts();
-      console.table(accounts.map(acc => acc.number));
+      console.table(accounts.map(acc => [acc.number, exportLabel(acc)]));
     } catch (err) {
       console.error(err);
     } finally {
@@ -59,7 +59,7 @@ program
       for (let account of accounts) {
         const ofx = await account.statementOFX();
         if (ofx) {
-          await fs_writeFile(path.join(out_path, account.number) + '.ofx', ofx);
+          await fs_writeFile(path.join(out_path, exportLabel(account)) + '.ofx', ofx);
         }
       }
     } catch (err) {
@@ -89,10 +89,34 @@ program
     );
     var digits = prompt('Enter the last digits of your card number: ');
     conf.set('card_digits', digits);
+    console.log(
+      "\nIf you want to export statements with a friendly name instead of the account\n" +
+        "number, you can add aliases here.\n" +
+        "Press enter to continue if you don't need this or once you're finished.\n",
+    );
+    var account, alias;
+    var aliases = {};
+    while (true) {
+      account = prompt('Enter an account number: ');
+      if (!account) {
+        break;
+      }
+      alias = prompt('Enter friendly label: ');
+      if (!alias) {
+        break;
+      }
+      aliases[account] = alias;
+    }
+    conf.set('aliases', aliases);
     console.log('\nBarclayscrape is now configured.');
   });
 
 program.parse(process.argv);
+
+function exportLabel(account) {
+  let aliases = conf.get('aliases') || {};
+  return aliases[account.number] || account.number;
+}
 
 async function auth() {
   if (!(conf.has('surname') && conf.has('membershipno'))) {
