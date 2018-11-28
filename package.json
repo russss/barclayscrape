@@ -1,6 +1,6 @@
 {
   "name": "barclayscrape",
-  "version": "3.0.5",
+  "version": "3.0.6",
   "description": "Programmatically manipulate Barclays online banking",
   "main": "barclayscrape.js",
   "bin": {
@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/russss/barclayscrape#readme",
   "dependencies": {
-    "commander": "^2.18.0",
+    "commander": "^2.19.0",
     "configstore": "^4.0.0",
     "puppeteer": "^1.10.0",
     "syncprompt": "^2.0.0"
