@@ -137,8 +137,7 @@ async function auth() {
   }
 
   if (program.motp && program.motp.length != 8) {
-    console.error('MOTP should be 8 characters long');
-    program.help();
+    program.motp = prompt('Enter your 8 digit mobile PIN sentry code: ');
   }
 
   // The --no-sandbox argument is required here for this to run on certain kernels
