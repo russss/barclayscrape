@@ -27,17 +27,16 @@ Usage
 -----
 ```
 Options:
-
   -V, --version       output the version number
-  --otp [pin]         Pinsentry PIN code
-  --motp [pin]        Mobile Pinsentry PIN code
+  --otp [pin]         PINSentry code
+  --motp [pin]        Mobile PINSentry code
   --no-headless       Show browser window when interacting
   -h, --help          output usage information
 
 Commands:
-
   list                List all available accounts
   get_ofx <out_path>  Fetch .ofx files for all accounts into out_path
+  csv [options]       Fetch .csv files for accounts
   config              Set up login details
 ```
 

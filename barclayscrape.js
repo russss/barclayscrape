@@ -72,7 +72,7 @@ program
 program
   .command('csv')
   .option('-p, --path', 'Export path')
-  .description('Fetch .ofx files for all accounts into out_path')
+  .description('Fetch .csv files for accounts')
   .action(async (options) => {
     var sess;
     try {
