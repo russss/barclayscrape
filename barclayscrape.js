@@ -70,6 +70,42 @@ program
   });
 
 program
+  .command('csv')
+  .option('-p, --path', 'Export path')
+  .description('Fetch .ofx files for all accounts into out_path')
+  .action(async (options) => {
+    var sess;
+    try {
+      sess = await auth();
+    } catch (err) {
+      console.error(err);
+      return;
+    }
+
+    try {
+      const accounts = await sess.accounts();
+      for (let account of accounts) {
+        const csvLines = await account.statementCSV();
+        if (csvLines) {
+          var label = exportLabel(account);
+          var extraLog = '';
+          if (label != account.number) {
+              extraLog = ' (' + account.number + ')'
+          }
+          let csv = [].join.call(csvLines, '\n');
+          let out_path = options.path || 'export';
+          console.log("Exporting " + label + extraLog + " (" + (csvLines.length - 1) + " rows)");
+          await fs_writeFile(path.join(out_path, label) + '.csv', csv);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      await sess.close();
+    }
+  });
+
+program
   .command('config')
   .description('Set up login details')
   .action(options => {
