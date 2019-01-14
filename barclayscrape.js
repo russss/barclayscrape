@@ -73,6 +73,8 @@ program
   .command('csv')
   .option('-p, --path', 'Export path')
   .description('Fetch .csv files for accounts')
+  .option('-f, --from', 'From date DD/MM/YYYY')
+  .option('-t, --to', 'To date DD/MM/YYYY')
   .action(async (options) => {
     var sess;
     try {
@@ -85,7 +87,7 @@ program
     try {
       const accounts = await sess.accounts();
       for (let account of accounts) {
-        const csvLines = await account.statementCSV();
+        const csvLines = await account.statementCSV(options.path, options.to);
         if (csvLines) {
           var label = exportLabel(account);
           var extraLog = '';

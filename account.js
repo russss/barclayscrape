@@ -45,7 +45,7 @@ module.exports = class Account {
     return ofx;
   }
 
-  async statement() {
+  async statement(from, to) {
     // Return a CSV-formatted string of the most recent account statement.
     await this.select();
     if (!(await this.page.$('table#filterable-ftb'))) {
@@ -56,6 +56,21 @@ module.exports = class Account {
       await this.session.home();
       return [];
     }
+
+    if (from) {
+      await this.page.$eval('#searchDateFromBottom', el => el.value = from);
+    }
+    if (to) {
+      await this.page.$eval('#searchDateToBottom', el => el.value = to);
+    }
+
+    // Always perform a search to normalise the html additional-data
+    // (yup, the initial format is different :/
+
+    // Remove this so we can wait for it again
+    await this.page.$eval('table#filterable-ftb', el => el.remove());
+    await this.page.$eval('#searchBottom', el => el.click());
+    await u.wait(this.page, 'table#filterable-ftb');
 
     // Parse the transactions in the context of the page.
     let transactions = await this.page.evaluate(() => {
@@ -77,7 +92,10 @@ module.exports = class Account {
                   txd['balance'] = row.querySelector('[headers=header-balance]').innerText.trim();
                   let transType = row.querySelector('.description div.additional-data div');
                   txd['trans-type'] = transType.innerText.trim();
-                  let refs = transType.nextSibling.textContent.split('\n');
+                  let refs = [];
+                  row.querySelectorAll('.description div.additional-data p').forEach((p) => {
+                    refs = refs.concat(p.textContent.split('\n'));
+                  });
                   let refParts = [];
                   refs.forEach(function (ref) {
                       let refTrim = ref.trim();
@@ -100,8 +118,8 @@ module.exports = class Account {
     return statement;
   }
 
-  async statementCSV() {
-    let statement  = await this.statement();
+  async statementCSV(from, to) {
+    let statement  = await this.statement(from, to);
     return this.csvLines(statement);
   }
 
