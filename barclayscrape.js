@@ -71,10 +71,10 @@ program
 
 program
   .command('csv')
-  .option('-p, --path', 'Export path')
+  .option('-p, --path <path>', 'Export path. defaults to ./export')
   .description('Fetch .csv files for accounts')
-  .option('-f, --from', 'From date DD/MM/YYYY')
-  .option('-t, --to', 'To date DD/MM/YYYY')
+  .option('-f, --from <dd/mm/yyyy>', 'From date')
+  .option('-t, --to <dd/mm/yyyy>', 'To date')
   .action(async (options) => {
     var sess;
     try {
