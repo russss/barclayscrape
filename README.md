@@ -37,6 +37,9 @@ Commands:
   list                List all available accounts
   get_ofx <out_path>  Fetch .ofx files for all accounts into out_path
   csv [options]       Fetch .csv files for accounts
+    -p, --path <path>        Export path. defaults to ./export
+    -f, --from <dd/mm/yyyy>  From date
+    -t, --to <dd/mm/yyyy>    To date
   config              Set up login details
 ```
 
