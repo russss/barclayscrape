@@ -1,12 +1,12 @@
 // Look for a warning on the page and raise it as an error.
-async function raiseWarning(page) {
-  const sel = await page.$('.notification--warning');
-  if (!sel) {
+async function raiseWarning(page, action, selector) {
+  const warning = await page.$('.notification--warning');
+  if (!warning) {
     return
   }
 
-  const warningText = await page.$eval(sel, el => el.textContent);
-  throw `Barclays Error: "${warningText.trim()}" (while fetching ${selector})`;
+  const warningText = await page.evaluate((el) => el.textContent, warning);
+  throw `Barclays Error: "${warningText.trim()}" (while ${action} ${selector})`;
 }
 
 // Click a link and wait for the navigation state to go to idle.
@@ -19,6 +19,10 @@ exports.click = async (page, selector) => {
       page.$eval(selector, el => el.click()),
     ]);
   } catch (err) {
+    raiseWarning(page, 'clicking', selector);
+
+    const screenshotFile = './click-error.png';
+    await page.screenshot({path: screenshotFile});
     throw `Error when clicking ${selector} on URL ${page.url()}: ${err}`;
   }
 };
@@ -39,7 +43,7 @@ exports.wait = async (page, selector) => {
   try {
     await page.waitFor(selector, {timeout: 10000});
   } catch (err) {
-    raiseWarning(page);
+    raiseWarning(page, 'fetching', selector);
 
     const screenshotFile = './error.png';
     await page.screenshot({path: screenshotFile});
