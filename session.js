@@ -41,7 +41,7 @@ class Session {
 
     const sel = await this.page.$(selector);
     if (sel) {
-      await this.page.$eval(selector, el => el.click())
+      await this.page.$eval(selector, el => { el.click() })
     }
   }
 

@@ -13,7 +13,7 @@ module.exports = class Account {
     // Switch the page to this account.
     // Call `await this.session.home()` to reset state when you're done.
     console.log('Selecting account ' + this.number);
-    await this.page.$eval('#a' + this.idx + ' #showStatements', el => el.click());
+    await this.page.$eval('#a' + this.idx + ' #showStatements', el => { el.click() });
     // waitForNavigation seems to stall indefinitely here (?!) so we don't use u.click
     await u.wait(this.page, '.transaction-list-container-header');
   }
@@ -58,18 +58,18 @@ module.exports = class Account {
     }
 
     if (from) {
-      await this.page.$eval('#searchDateFromBottom', el => el.value = from);
+      await this.page.$eval('#searchDateFromBottom', (el, f) => { el.value = f }, from);
     }
     if (to) {
-      await this.page.$eval('#searchDateToBottom', el => el.value = to);
+      await this.page.$eval('#searchDateToBottom', (el, t) => { el.value = t }, to);
     }
 
     // Always perform a search to normalise the html additional-data
     // (yup, the initial format is different :/
 
     // Remove this so we can wait for it again
-    await this.page.$eval('table#filterable-ftb', el => el.remove());
-    await this.page.$eval('#searchBottom', el => el.click());
+    await this.page.$eval('table#filterable-ftb', el => { el.remove() });
+    await this.page.$eval('#searchBottom', el => { el.click() });
     await u.wait(this.page, 'table#filterable-ftb');
 
     // Parse the transactions in the context of the page.

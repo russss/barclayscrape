@@ -5,7 +5,7 @@ async function raiseWarning(page, action, selector) {
     return
   }
 
-  const warningText = await page.evaluate((el) => el.textContent, warning);
+  const warningText = await page.evaluate((el) => { return el.textContent }, warning);
   throw `Barclays Error: "${warningText.trim()}" (while ${action} ${selector})`;
 }
 
@@ -16,7 +16,7 @@ exports.click = async (page, selector) => {
       page.waitForNavigation({timeout: 10000}),
       // Executing el.click() within the page context with $eval means we can
       // click invisible links, which simplifies things.
-      page.$eval(selector, el => el.click()),
+      page.$eval(selector, el => { el.click() }),
     ]);
   } catch (err) {
     raiseWarning(page, 'clicking', selector);
@@ -35,7 +35,7 @@ exports.fillFields = async (page, form) => {
 };
 
 exports.getAttribute = (page, element, attribute) => {
-  return page.evaluate((el, attr) => el.getAttribute(attr), element, attribute);
+  return page.evaluate((el, attr) => { return el.getAttribute(attr) }, element, attribute);
 };
 
 // Wait for a selector to become visible, and issue a nice error if it doesn't.
