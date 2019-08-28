@@ -2,18 +2,18 @@ const u = require('./utils.js');
 
 // Class for dealing with the Barclays account page.
 module.exports = class Account {
-  constructor(session, number, idx) {
+  constructor(session, href, number) {
     this.session = session;
     this.page = session.page;
     this.number = number;
-    this.idx = idx;
+    this.href = href;
   }
 
   async select() {
     // Switch the page to this account.
     // Call `await this.session.home()` to reset state when you're done.
     console.log('Selecting account ' + this.number);
-    await this.page.$eval('#a' + this.idx + ' #showStatements', el => el.click());
+    await this.page.$eval('[href="'+u.cssEsc(this.href)+'"]', el => { el.click() });
     // waitForNavigation seems to stall indefinitely here (?!) so we don't use u.click
     await u.wait(this.page, '.transaction-list-container-header');
   }
@@ -30,15 +30,16 @@ module.exports = class Account {
       return null;
     }
 
-    // Locate the download links
-    const dl_el = await this.page.$x("//a[text()[contains(., ' Money 2001')]]");
-
-    // Fetch the href of this link in the context of the page.
-    const ofx = await this.page.evaluate(el => {
-      return fetch(el.href, {method: 'GET', credentials: 'include'}).then(r =>
+    const ofx = await this.page.evaluate(() => {
+      let hashTag = document.querySelector('#trans-hashTag').value;
+      let data = JSON.stringify({
+        "hashTag": hashTag
+      });
+      let url = "https://bank.barclays.co.uk/olb/trans/transdecouple/ControllerExportTransaction.do?hashTag=" + hashTag + "&param=" + data + "&downloadFormat=ofx";
+      return fetch(url, {method: 'GET', credentials: 'include'}).then(r =>
         r.text(),
       );
-    }, dl_el[0]);
+    });
     console.log('Fetched OFX for account ' + this.number);
 
     await this.session.home();
@@ -48,7 +49,7 @@ module.exports = class Account {
   async statement(from, to) {
     // Return a CSV-formatted string of the most recent account statement.
     await this.select();
-    if (!(await this.page.$('table#filterable-ftb'))) {
+    if (!(await this.page.$('#filterable-trans .tbody-trans'))) {
       console.log(
         'No transactions for account ' +
           this.number,
@@ -57,26 +58,41 @@ module.exports = class Account {
       return [];
     }
 
-    if (from) {
-      await this.page.$eval('#searchDateFromBottom', el => el.value = from);
-    }
-    if (to) {
-      await this.page.$eval('#searchDateToBottom', el => el.value = to);
-    }
-
     // Always perform a search to normalise the html additional-data
     // (yup, the initial format is different :/
+    await this.page.$eval('#searchBtn', el => { el.click() });
 
-    // Remove this so we can wait for it again
-    await this.page.$eval('table#filterable-ftb', el => el.remove());
-    await this.page.$eval('#searchBottom', el => el.click());
-    await u.wait(this.page, 'table#filterable-ftb');
+    await u.wait(this.page, '#search');
+
+    if (from) {
+      let fromSelector = '[label="From date"] [name=datepicker]';
+      await u.wait(this.page, fromSelector);
+      await this.page.$eval(fromSelector, (el, f) => {
+        el.value = f;
+        angular.element(el).triggerHandler('input');
+      }, from);
+    }
+    if (to) {
+      let toSelector = '[label="To date"] [name=datepicker]';
+      await u.wait(this.page, toSelector);
+      await this.page.$eval(toSelector, (el, t) => {
+        el.value = t;
+        angular.element(el).triggerHandler('input');
+      }, to);
+    }
+
+
+    await this.page.$eval('#search', el => { el.click() });
+
+    await this.page.waitForFunction(() => {
+      return document.querySelector('#trans-spinner').style.display === 'none';
+    });
 
     // Parse the transactions in the context of the page.
     let transactions = await this.page.evaluate(() => {
       let txns = {};
       let txn_list = [];
-      let rows = document.querySelectorAll('table#filterable-ftb tbody tr');
+      let rows = document.querySelectorAll('#filterable-trans .tbody-trans .tr');
       if (rows.length) {
           [].forEach.call(rows, function (row) {
               if (row.id) {
@@ -85,17 +101,26 @@ module.exports = class Account {
                   txd = {};
                   txn_list.push(txd);
                   txns[row_id] = txd;
-                  txd['amount'] = row.querySelector('[headers=header-money-in]').innerText.trim()
-                      || row.querySelector('[headers=header-money-out]').innerText.trim();
+                  txd['amount'] = row.querySelector('.money-in').innerText.trim()
+                      || row.querySelector('.money-out').innerText.trim();
                   txd['description'] = row.querySelector('.description span').innerText.trim();
-                  txd['date'] = row.querySelector('[headers=header-date]').innerText.trim();
-                  txd['balance'] = row.querySelector('[headers=header-balance]').innerText.trim();
-                  let transType = row.querySelector('.description div.additional-data div');
+                  let date = new Date(Date.parse(row.querySelector('.date').innerText.trim()));
+                  let day = (date.getDate() + '').padStart(2, '0');
+                  let month = (date.getMonth() + 1 + '').padStart(2, '0');
+                  let year = date.getFullYear();
+                  txd['date'] = day + '/' + month + '/' + year;
+                  txd['balance'] = row.querySelector('.balance').innerText.trim();
+                  let transType = row.querySelector('.additional-data-ref-wrapper .additional-data-content');
                   txd['trans-type'] = transType.innerText.trim();
                   let refs = [];
-                  row.querySelectorAll('.description div.additional-data p').forEach((p) => {
-                    refs = refs.concat(p.textContent.split('\n'));
-                  });
+                  let ref1 = row.querySelector('[data-ng-if="entry.narrativeLine2"]');
+                  if (ref1) {
+                    refs.push(ref1.textContent);
+                  }
+                  let extraRefs = row.querySelector('[data-ng-if="entry.narrativeLine3to15"]');
+                  if (extraRefs) {
+                    refs.push(extraRefs.textContent.replace(/\s\s+/g, '\n').split('\n').join(' '));
+                  }
                   let refParts = [];
                   refs.forEach(function (ref) {
                       let refTrim = ref.trim();

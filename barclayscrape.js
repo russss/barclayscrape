@@ -87,7 +87,7 @@ program
     try {
       const accounts = await sess.accounts();
       for (let account of accounts) {
-        const csvLines = await account.statementCSV(options.path, options.to);
+        const csvLines = await account.statementCSV(options.from, options.to);
         if (csvLines) {
           var label = exportLabel(account);
           var extraLog = '';
