@@ -113,11 +113,11 @@ module.exports = class Account {
                   let transType = row.querySelector('.additional-data-ref-wrapper .additional-data-content');
                   txd['trans-type'] = transType.innerText.trim();
                   let refs = [];
-                  let ref1 = row.querySelector('[ng-if="entry.narrativeLine2"]');
+                  let ref1 = row.querySelector('[data-ng-if="entry.narrativeLine2"]');
                   if (ref1) {
                     refs.push(ref1.textContent);
                   }
-                  let extraRefs = row.querySelector('[ng-if="entry.narrativeLine3to15"]');
+                  let extraRefs = row.querySelector('[data-ng-if="entry.narrativeLine3to15"]');
                   if (extraRefs) {
                     refs.push(extraRefs.textContent.replace(/\s\s+/g, '\n').split('\n').join(' '));
                   }
