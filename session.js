@@ -6,7 +6,6 @@ class Session {
   async init(options) {
     this.browser = await puppeteer.launch(options);
     this.page = await this.browser.newPage();
-    await this.page.setViewport({ width: 1366, height: 768});
     this.logged_in = false;
     //this.page.on('console', msg => console.log('PAGE LOG:', msg.text()));
     await this.page.setViewport({width: 1000, height: 1500});
