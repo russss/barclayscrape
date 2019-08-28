@@ -6,6 +6,7 @@ class Session {
   async init(options) {
     this.browser = await puppeteer.launch(options);
     this.page = await this.browser.newPage();
+    await this.page.setViewport({ width: 1366, height: 768});
     this.logged_in = false;
     //this.page.on('console', msg => console.log('PAGE LOG:', msg.text()));
     await this.page.setViewport({width: 1000, height: 1500});
@@ -48,7 +49,7 @@ class Session {
   async ensureLoggedIn() {
     // Check that we're looking at the logged in homepage and throw an
     // error if we aren't.
-    await u.wait(this.page, '#module-account-summary');
+    await u.wait(this.page, '.accounts-body');
     this.logged_in = true;
   }
 
@@ -80,23 +81,30 @@ class Session {
   }
 
   async accounts() {
-    const accs = await this.page.$$('a#account-actions');
+    let accData = await this.page.$$eval('.o-account-list__item', accounts => {
+      return accounts.map(acc => {
+        return [
+          acc.querySelector('.my-account-link').getAttribute('href'),
+          acc.querySelector('.o-account__details-body').innerText.replace(/[\s-]/g, '')
+        ]
+      });
+    });
     let res = [];
-    for (let a of accs) {
+    accData.forEach(a => {
       res.push(
         new Account(
           this,
-          await u.getAttribute(this.page, a, 'data-productid'),
-          await u.getAttribute(this.page, a, 'data-productindex'),
+          a[0],
+          a[1]
         ),
       );
-    }
+    });
     return res;
   }
 
   async home() {
-    await u.click(this.page, '#logo');
-    await u.wait(this.page, '.account-paging');
+    await u.click(this.page, '[aria-label="Home"]');
+    await u.wait(this.page, '.accounts-body');
   }
 }
 
