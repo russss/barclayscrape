@@ -84,7 +84,7 @@ class Session {
       return accounts.map(acc => {
         return [
           acc.querySelector('.my-account-link').getAttribute('href'),
-          acc.querySelector('.o-account__details-body').innerText.replace(/[\s-]/g, '')
+          acc.querySelector('.o-account').getAttribute('id').replace(/[^0-9]/g, '')
         ]
       });
     });
