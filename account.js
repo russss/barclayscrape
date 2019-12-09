@@ -110,7 +110,7 @@ module.exports = class Account {
                   let year = date.getFullYear();
                   txd['date'] = day + '/' + month + '/' + year;
                   txd['balance'] = row.querySelector('.balance').innerText.trim();
-                  let transType = row.querySelector('.additional-data-ref-wrapper .additional-data-content');
+                  let transType = row.querySelector('[headers=header-description] .additional-data-content:not(.ng-scope)');
                   txd['trans-type'] = transType.innerText.trim();
                   let refs = [];
                   let ref1 = row.querySelector('[data-ng-if="entry.narrativeLine2"]');
