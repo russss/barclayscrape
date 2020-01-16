@@ -30,6 +30,7 @@ Options:
   -V, --version       output the version number
   --otp [pin]         PINSentry code
   --motp [pin]        Mobile PINSentry code
+  --plogin            Memorable passcode and password
   --no-headless       Show browser window when interacting
   -h, --help          output usage information
 
@@ -78,3 +79,14 @@ hooked up to barclayscrape like so:
 Please be aware that if you're putting this command into cron, any error
 emails will include your PIN in the subject line. It's worth using a small
 shell script to prevent this.
+
+Logging in using memorable passcode
+-----------------------------------
+If your Barclays account has been configured to support logging in via 
+passcode and password, this feature is supported using `--plogin`,
+allowing a completely automated login
+
+PINSentry is still required to transfer funds to non-approved destinations.
+
+**SECURITY NOTE:** It is not recommended you use this feature, unless you are aware 
+of the security implications (credentials are NOT encrypted!).
