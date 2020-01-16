@@ -170,6 +170,7 @@ program
     }
     conf.set('aliases', aliases);
     console.log('\nBarclayscrape is now configured.');
+    console.log('Credentials were saved to: ' + conf.path);
   });
 
 program.parse(process.argv);
