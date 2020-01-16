@@ -136,6 +136,10 @@ class Session {
     });
     let res = [];
     accData.forEach(a => {
+      if (a[1] == '') {
+        return;
+      }
+
       res.push(
         new Account(
           this,
