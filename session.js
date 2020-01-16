@@ -7,6 +7,11 @@ class Session {
     this.browser = await puppeteer.launch(options);
     this.page = await this.browser.newPage();
     this.logged_in = false;
+
+    // hide headless chrome from Barclays, as it seems to be detected in some cases
+    let useragent = await this.browser.userAgent();
+    await this.page.setUserAgent(useragent.replace("HeadlessChrome", "Chrome"));
+
     //this.page.on('console', msg => console.log('PAGE LOG:', msg.text()));
     await this.page.setViewport({width: 1000, height: 1500});
     await this.page.goto('https://bank.barclays.co.uk');
