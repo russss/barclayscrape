@@ -157,7 +157,7 @@ module.exports = class Account {
                 ref = ref + '-' + d.ref2;
             }
         }
-        return d['date'] + ',' + d['trans-type'].replace(/,/g, ';') + '-' + d['description'].replace(/,/g, ';') + ref + ',' + d['amount'].replace(/[£,]/g, '');
+        return d['date'] + ',' + d['trans-type'].replace(/,/g, ';') + '-' + d['description'].replace(/,/g, ';') + ref + ',' + d['amount'].replace(/[£, A-Z]/g, '');
     });
     
     csvLines.unshift('Date,Reference,Amount');
