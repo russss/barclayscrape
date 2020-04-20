@@ -29,14 +29,16 @@ class Session {
   async loginSelectMethod(method) {
     // Stage 2: If multiple auth methods are enabled for this account,
     // select the correct one.
+    let selector = '[ng-controller="authTFACtrl"] ';
     
     // Wait for the login button which hopefully means the page has loaded.
     await u.wait(this.page, 'button[title="Log in to Online Banking"]')
-    let selector = '[ng-controller="authTFACtrl"] ';
     if (method == 'motp') {
       selector += 'input#radio-c3';
     } else if (method == 'otp') {
       selector += 'input#radio-c4';
+    } else if (method == 'plogin') {
+      selector += 'input#radio-c2';
     }
 
     const sel = await this.page.$(selector);
@@ -78,6 +80,50 @@ class Session {
     await u.click(this.page, 'button[title="Log in to Online Banking"]');
     await this.ensureLoggedIn();
   }
+  
+  async loginPasscode(credentials) {
+    // Log in using memorable passcode and password
+    await this.loginStage1(credentials);
+    await this.loginSelectMethod('plogin');
+    await u.wait(this.page, '#passcode0');
+    
+    // detect which character indices are required
+    await u.wait(this.page, '#label-memorableCharacters');
+    
+    const options = await this.page.$$('#label-memorableCharacters');
+    for (const option of options) {
+        const label = await this.page.evaluate(el => el.innerText, option);
+
+        let digits = /[0-9]{1,2}/g;
+        let indices = label.match(digits);
+
+        if (indices.length == 2) {
+            const char1 = credentials['password'].substr(indices[0]-1, 1);
+            const char2 = credentials['password'].substr(indices[1]-1, 1);
+            
+            await u.fillFields(this.page, {
+                'input[name="passcode"]': credentials["passcode"],
+            });
+            
+            await u.wait(this.page, 'div.dropdown.firstMemorableCharacter div');
+            await this.page.focus('div.dropdown.firstMemorableCharacter');
+            await u.fillFields(this.page, {
+                'div.dropdown.firstMemorableCharacter': char1,
+            });
+
+            await u.wait(this.page, 'div.dropdown.secondMemorableCharacter div');
+            await this.page.focus('div.dropdown.secondMemorableCharacter');
+            await u.fillFields(this.page, {
+                'div.dropdown.secondMemorableCharacter': char2,
+            });
+            
+            // arbitrary delay is not ideal, but have been unable to identify a suitable wait candidate for state update
+            await this.page.waitFor(1000);
+            await u.click(this.page, 'button[title="Log in to Online Banking"]');
+            await this.ensureLoggedIn();
+        }
+    }
+  }
 
   async accounts() {
     let accData = await this.page.$$eval('.o-account-list__item', accounts => {
@@ -90,6 +136,10 @@ class Session {
     });
     let res = [];
     accData.forEach(a => {
+      if (a[1] == '') {
+        return;
+      }
+
       res.push(
         new Account(
           this,

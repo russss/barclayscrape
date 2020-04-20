@@ -18,6 +18,7 @@ program
   .description('Programmatic access to Barclays online banking.')
   .option('--otp [pin]', 'PINSentry code')
   .option('--motp [pin]', 'Mobile PINSentry code')
+  .option('--plogin', 'Login using passcode and password')
   .option('--no-headless', 'Show browser window when interacting');
 
 program
@@ -127,6 +128,28 @@ program
     );
     var digits = prompt('Enter the last digits of your card number: ');
     conf.set('card_digits', digits);
+	
+    console.log(
+      "\nSome Barclays accounts allow a restricted login, using a memorable passcode and password (using the  --plogin options).\n" +
+        "It is recommended you leave this blank, unless you understand the security implications.\n",
+    );
+    do {
+      var passcode = prompt('Enter your 5 digit memorable passcode, or leave blank (recommended): ');
+      if ((passcode !== '') && (passcode.length != 5)) {
+        console.log('Memorable passcode must be 5 digits');
+      }
+    } while ((passcode !== '') && (passcode.length != 5));
+    conf.set('passcode', passcode);
+
+    var password = '';
+    if (passcode !== '') {
+        console.log(
+          "\nIn addition to your passcode, you must also provide your memorable password (Barclays will request 2 random characters from it).\n"
+        );
+        password = prompt('Enter your memorable password: ');
+    }
+    conf.set('password', password);
+
     console.log(
       "\nIf you want to export statements with a friendly name instead of the account\n" +
         "number, you can add aliases here.\n" +
@@ -147,6 +170,7 @@ program
     }
     conf.set('aliases', aliases);
     console.log('\nBarclayscrape is now configured.');
+    console.log('Credentials were saved to: ' + conf.path);
   });
 
 program.parse(process.argv);
@@ -164,8 +188,8 @@ async function auth() {
     program.help();
   }
 
-  if (!(program.otp || program.motp)) {
-    console.error('--otp or --motp must be specified');
+  if (!(program.otp || program.motp || program.plogin)) {
+    console.error('Must specify either --otp, --motp or --plogin');
     program.help();
   }
 
@@ -194,13 +218,20 @@ async function auth() {
         card_digits: conf.get('card_digits'),
         otp: program.otp,
       });
-    } else if (program.motp) {
-      await sess.loginMOTP({
-        surname: conf.get('surname'),
-        membershipno: conf.get('membershipno'),
-        motp: program.motp,
-      });
-    }
+  } else if (program.motp) {
+    await sess.loginMOTP({
+      surname: conf.get('surname'),
+      membershipno: conf.get('membershipno'),
+      motp: program.motp,
+    });
+  } else if (program.plogin) {
+    await sess.loginPasscode({
+      surname: conf.get('surname'),
+      membershipno: conf.get('membershipno'),
+      passcode: conf.get('passcode'),
+      password: conf.get('password'),
+  });
+}
   } catch (err) {
     try {
       await sess.close();
