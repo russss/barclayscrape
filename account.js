@@ -47,9 +47,8 @@ module.exports = class Account {
   }
 
   async statement(from, to) {
-    // Return a CSV-formatted string of the most recent account statement.
     await this.select();
-    if (!(await this.page.$('#filterable-trans .tbody-trans'))) {
+    if ((await this.page.$('#no-trans-msg'))) {
       console.log(
         'No transactions for account ' +
           this.number,
@@ -144,6 +143,7 @@ module.exports = class Account {
   }
 
   async statementCSV(from, to) {
+    // Return a CSV-formatted string of the most recent account statement.
     let statement  = await this.statement(from, to);
     return this.csvLines(statement);
   }
@@ -157,7 +157,7 @@ module.exports = class Account {
                 ref = ref + '-' + d.ref2;
             }
         }
-        return d['date'] + ',' + d['trans-type'].replace(/,/g, ';') + '-' + d['description'].replace(/,/g, ';') + ref + ',' + d['amount'].replace(/[£,]/g, '');
+        return d['date'] + ',' + d['trans-type'].replace(/,/g, ';') + '-' + d['description'].replace(/,/g, ';') + ref + ',' + d['amount'].replace(/[£, A-Z]/g, '');
     });
     
     csvLines.unshift('Date,Reference,Amount');
