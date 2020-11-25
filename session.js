@@ -18,33 +18,17 @@ class Session {
 
   async loginStage1(credentials) {
     // Stage 1 of login - enter surname and membership number.
-    await u.wait(this.page, '#membershipNum0');
+    await u.wait(this.page, '#membership0');
     await u.fillFields(this.page, {
-      '#surname0': credentials['surname'],
-      '#membershipNum0': credentials['membershipno'],
+      '#surnameMem': credentials['surname'],
+      '#membership0': credentials['membershipno'],
     });
-    await u.click(this.page, 'button[title="Next Step"]');
+    await u.click(this.page, 'button#continue');
   }
 
   async loginSelectMethod(method) {
-    // Stage 2: If multiple auth methods are enabled for this account,
-    // select the correct one.
-    let selector = '[ng-controller="authTFACtrl"] ';
-    
-    // Wait for the login button which hopefully means the page has loaded.
-    await u.wait(this.page, 'button[title="Log in to Online Banking"]')
-    if (method == 'motp') {
-      selector += 'input#radio-c3';
-    } else if (method == 'otp') {
-      selector += 'input#radio-c4';
-    } else if (method == 'plogin') {
-      selector += 'input#radio-c2';
-    }
-
-    const sel = await this.page.$(selector);
-    if (sel) {
-      await this.page.$eval(selector, el => { el.click() })
-    }
+    // TODO: re-implement this - OTP is the default for me.
+    // There's now a tab bar along the top of the page which needs clicking to switch method.
   }
 
   async ensureLoggedIn() {
@@ -58,13 +42,13 @@ class Session {
     // Log in using a one time password (PinSentry).
     await this.loginStage1(credentials);
     await this.loginSelectMethod('otp');
-    await u.wait(this.page, '#pinsentryCode0');
+    await u.wait(this.page, '#mobilePinsentryCode-input-1');
     await u.fillFields(this.page, {
       '#lastDigits0': credentials['card_digits'],
-      '#pinsentryCode0': credentials['otp'].slice(0, 4),
-      '#pinsentryCode1': credentials['otp'].slice(4, 8),
+      '#mobilePinsentryCode-input-1': credentials['otp'].slice(0, 4),
+      '#mobilePinsentryCode-input-2': credentials['otp'].slice(4, 8),
     });
-    await u.click(this.page, 'button[title="Log in to Online Banking"]');
+    await u.click(this.page, 'button#submitAuthentication');
     await this.ensureLoggedIn();
   }
 
