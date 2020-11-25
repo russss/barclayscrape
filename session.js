@@ -48,6 +48,11 @@ class Session {
       '#mobilePinsentryCode-input-1': credentials['otp'].slice(0, 4),
       '#mobilePinsentryCode-input-2': credentials['otp'].slice(4, 8),
     });
+
+    // Press tab and wait 500ms so annoying JS validation can run
+    await this.page.keyboard.press('Tab');
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     await u.click(this.page, 'button#submitAuthentication');
     await this.ensureLoggedIn();
   }
