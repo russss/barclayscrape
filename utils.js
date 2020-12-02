@@ -30,7 +30,6 @@ exports.click = async (page, selector) => {
 exports.fillFields = async (page, form) => {
   // Disappointingly, you can't type into multiple fields simultaneously.
   for (let key of Object.keys(form)) {
-    await page.click(key);
     await page.type(key, form[key]);
   }
 };
