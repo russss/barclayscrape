@@ -1,6 +1,6 @@
 {
   "name": "barclayscrape",
-  "version": "3.0.12",
+  "version": "3.0.13",
   "description": "Programmatically manipulate Barclays online banking",
   "main": "barclayscrape.js",
   "bin": {
