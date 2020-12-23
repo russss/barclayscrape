@@ -41,7 +41,7 @@ exports.getAttribute = (page, element, attribute) => {
 // Wait for a selector to become visible, and issue a nice error if it doesn't.
 exports.wait = async (page, selector) => {
   try {
-    await page.waitFor(selector, {timeout: 30000});
+    await page.waitForSelector(selector, {timeout: 30000});
   } catch (err) {
     raiseWarning(page, 'fetching', selector);
 

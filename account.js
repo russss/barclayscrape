@@ -22,7 +22,7 @@ module.exports = class Account {
     // Return an OFX-formatted string of the most recent account statement.
     await this.select();
     // waitFor is required here as of 12/2020
-    await this.page.waitFor(1000);
+    await this.page.waitForTimeout(1000);
     if (!(await this.page.$('a.export'))) {
       console.log(
         'No export option (probably no transactions) for account ' +
