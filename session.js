@@ -6,6 +6,7 @@ class Session {
   async init(options) {
     this.browser = await puppeteer.launch(options);
     this.page = await this.browser.newPage();
+    this.page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36');
     this.logged_in = false;
     //this.page.on('console', msg => console.log('PAGE LOG:', msg.text()));
     await this.page.setViewport({width: 1000, height: 1500});
