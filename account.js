@@ -59,10 +59,6 @@ module.exports = class Account {
       return [];
     }
 
-    // Always perform a search to normalise the html additional-data
-    // (yup, the initial format is different :/
-    await this.page.$eval('#searchBtn', el => { el.click() });
-
     await u.wait(this.page, '#search');
 
     if (from) {
@@ -138,7 +134,14 @@ module.exports = class Account {
     });
 
     let statement = [].slice.call(transactions);
-    console.log('Fetched statement for account ' + this.number);
+    let logLine = 'Fetched statement for account ' + this.number;
+    if (from) {
+      logLine += ' from=' + from;
+    }
+    if (to) {
+      logLine += ' to=' + to;
+    }
+    console.log(logLine);
 
     await this.session.home();
     return statement;
