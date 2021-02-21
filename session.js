@@ -27,8 +27,27 @@ class Session {
   }
 
   async loginSelectMethod(method) {
-    // TODO: re-implement this - OTP is the default for me.
     // There's now a tab bar along the top of the page which needs clicking to switch method.
+    let selector = 'button';
+    switch (method) {
+      case 'motp':
+        selector += '#athenticationType_tab_button_0';
+        break;
+
+      case 'otp':
+        selector += '#athenticationType_tab_button_1';
+        break;
+
+      case 'plogin':
+        selector += '#athenticationType_tab_button_2';
+        break;
+
+      default:
+        return;
+    }
+
+    await u.wait(this.page, selector);
+    await this.page.$eval(selector, el => { el.click() });
   }
 
   async ensureLoggedIn() {
