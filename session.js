@@ -74,48 +74,52 @@ class Session {
     await u.click(this.page, 'button#submitAuthentication');
     await this.ensureLoggedIn();
   }
-  
+
   async loginPasscode(credentials) {
     // Log in using memorable passcode and password
     await this.loginStage1(credentials);
     await this.loginSelectMethod('plogin');
-    await u.wait(this.page, '#passcode0');
-    
+    await u.wait(this.page, '#passcode');
+
     // detect which character indices are required
-    await u.wait(this.page, '#label-memorableCharacters');
-    
-    const options = await this.page.$$('#label-memorableCharacters');
+    await u.wait(this.page, '#memorableCharacters-1');
+
+    // need to wait for the hidden spans to populate
+    await this.page.waitForTimeout(750);
+
+    const options = await this.page.$$('#memorableCharacters-1, #memorableCharacters-2');
+    let indices = [];
+
     for (const option of options) {
         const label = await this.page.evaluate(el => el.innerText, option);
 
         let digits = /[0-9]{1,2}/g;
-        let indices = label.match(digits);
+        indices.push(label.match(digits)[0]);
+    }
 
-        if (indices.length == 2) {
-            const char1 = credentials['password'].substr(indices[0]-1, 1);
-            const char2 = credentials['password'].substr(indices[1]-1, 1);
-            
-            await u.fillFields(this.page, {
-                'input[name="passcode"]': credentials["passcode"],
-            });
-            
-            await u.wait(this.page, 'div.dropdown.firstMemorableCharacter div');
-            await this.page.focus('div.dropdown.firstMemorableCharacter');
-            await u.fillFields(this.page, {
-                'div.dropdown.firstMemorableCharacter': char1,
-            });
+    if (indices.length == 2) {
+        const char1 = credentials['password'].substr(indices[0]-1, 1);
+        const char2 = credentials['password'].substr(indices[1]-1, 1);
 
-            await u.wait(this.page, 'div.dropdown.secondMemorableCharacter div');
-            await this.page.focus('div.dropdown.secondMemorableCharacter');
-            await u.fillFields(this.page, {
-                'div.dropdown.secondMemorableCharacter': char2,
-            });
-            
-            // arbitrary delay is not ideal, but have been unable to identify a suitable wait candidate for state update
-            await this.page.waitForTimeout(1000);
-            await u.click(this.page, 'button[title="Log in to Online Banking"]');
-            await this.ensureLoggedIn();
-        }
+        await u.fillFields(this.page, {
+            'input[name="passcode"]': credentials["passcode"],
+            '#memorableCharacters-input-1': char1,
+            '#memorableCharacters-input-2': char2,
+        });
+
+        // Press tab and wait 500ms so annoying JS validation can run
+        await this.page.keyboard.press('Tab');
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        await u.click(this.page, 'button#submitAuthentication');
+
+        // TODO: work around the new last 4 + CVC check
+        // selectors as of 2021-02-21
+        // #scaCardLastDigits
+        // #scaSecurityCode
+        // #saveScaAuthentication
+
+        await this.ensureLoggedIn();
     }
   }
 
