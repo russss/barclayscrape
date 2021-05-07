@@ -122,7 +122,7 @@ program
     } while (num.length != 12);
     conf.set('membershipno', num);
     console.log(
-      "\nIf you're going to be logging in using PinSentry, please enter the last few\n" +
+      "\nIf you're going to be logging in using PinSentry or Passcode, please enter the last few\n" +
         "(usually four) digits of your card number, which you're prompted for on login.\n" +
         "If you're using Mobile PinSentry, you can leave this blank.\n",
     );
@@ -130,8 +130,8 @@ program
     conf.set('card_digits', digits);
 	
     console.log(
-      "\nSome Barclays accounts allow a restricted login, using a memorable passcode and password (using the  --plogin options).\n" +
-        "It is recommended you leave this blank, unless you understand the security implications.\n",
+      "\nSome accounts allow logging in via a memorable passcode and password.\n" +
+      "It is recommended you leave this blank, unless you understand the security implications.\n",
     );
     do {
       var passcode = prompt('Enter your 5 digit memorable passcode, or leave blank (recommended): ');
@@ -139,16 +139,39 @@ program
         console.log('Memorable passcode must be 5 digits');
       }
     } while ((passcode !== '') && (passcode.length != 5));
-    conf.set('passcode', passcode);
 
     var password = '';
     if (passcode !== '') {
-        console.log(
-          "\nIn addition to your passcode, you must also provide your memorable password (Barclays will request 2 random characters from it).\n"
+      console.log(
+          "\nEnter your memorable password (Barclays will request 2 random characters from it when logging in via passcode).\n"
         );
         password = prompt('Enter your memorable password: ');
     }
-    conf.set('password', password);
+
+    var card_cvv = '';
+    if (passcode !== '') {
+      console.log(
+        "\nWhen logging in via passcode, Barclays will occasionally prompt for your card CVV number as an additional security measure.\n"
+      );
+
+      do {
+        card_cvv = prompt('Enter the 3 digit CVV number (on the back of your card), or leave blank to abort: ');
+        if ((card_cvv !== '') && (card_cvv.length != 3)) {
+          console.log('CVV be exactly 3 digits, or leave blank to abort');
+        }
+      } while ((card_cvv !== '') && (card_cvv.length != 3));
+
+      if (card_cvv == '') {
+        // exit with error message
+        console.log("Error: configuration was aborted due to blank CVV digits");
+        return;
+      }
+
+      // defer saving passcode login details, until all fields are valid
+      conf.set('passcode', passcode);
+      conf.set('password', password);
+      conf.set('card_cvv', card_cvv);
+    }
 
     console.log(
       "\nIf you want to export statements with a friendly name instead of the account\n" +
@@ -230,6 +253,8 @@ async function auth() {
       membershipno: conf.get('membershipno'),
       passcode: conf.get('passcode'),
       password: conf.get('password'),
+      card_digits: conf.get('card_digits'),
+      card_cvv: conf.get('card_cvv'),
   });
 }
   } catch (err) {
