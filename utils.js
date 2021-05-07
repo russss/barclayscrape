@@ -9,6 +9,10 @@ async function raiseWarning(page, action, selector) {
   throw `Barclays Error: "${warningText.trim()}" (while ${action} ${selector})`;
 }
 
+exports.screenshot = async(page, filename) => {
+  await page.screenshot({path: filename, fullPage: true});
+}
+
 // Click a link and wait for the navigation state to go to idle.
 exports.click = async (page, selector) => {
   try {
@@ -21,17 +25,20 @@ exports.click = async (page, selector) => {
   } catch (err) {
     raiseWarning(page, 'clicking', selector);
 
-    const screenshotFile = './click-error.png';
-    await page.screenshot({path: screenshotFile, fullPage: true});
+    await exports.screenshot(page, 'error.png');
     throw `Error when clicking ${selector} on URL ${page.url()}: ${err}`;
   }
 };
 
+exports.fillField = async (page, key, value) => {
+    await page.click(key);
+    await page.type(key, value);
+}
+
 exports.fillFields = async (page, form) => {
   // Disappointingly, you can't type into multiple fields simultaneously.
   for (let key of Object.keys(form)) {
-    await page.click(key);
-    await page.type(key, form[key]);
+    await exports.fillField(page, key, form[key]);
   }
 };
 
@@ -46,8 +53,8 @@ exports.wait = async (page, selector) => {
   } catch (err) {
     raiseWarning(page, 'fetching', selector);
 
-    const screenshotFile = './error.png';
-    await page.screenshot({path: screenshotFile, fullPage: true});
+    let screenshotFile = './error.png';
+    await exports.screenshot(page, screenshotFile);
     throw `Couldn't find selector "${selector}" on page ${page.url()}. Screenshot saved to ${screenshotFile}.`;
   }
 };
