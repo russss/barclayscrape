@@ -98,44 +98,50 @@ class Session {
     // Log in using memorable passcode and password
     await this.loginStage1(credentials);
     await this.loginSelectMethod('plogin');
-    await u.wait(this.page, '#passcode0');
-    
-    // detect which character indices are required
-    await u.wait(this.page, '#label-memorableCharacters');
-    
-    const options = await this.page.$$('#label-memorableCharacters');
-    for (const option of options) {
-        const label = await this.page.evaluate(el => el.innerText, option);
+    await u.wait(this.page, '#passcode');
+    await u.fillFields(this.page, {
+      'input[name="passcode"]': credentials["passcode"]
+    })
 
-        let digits = /[0-9]{1,2}/g;
-        let indices = label.match(digits);
+    let digits = /[0-9]{1,2}/g;
+    let char_selectors = [
+      'div.memorableWordInputSpaceFirst #memorableCharacters-1',
+      'div.memorableWordInputSpace #memorableCharacters-2'
+    ];
 
-        if (indices.length == 2) {
-            const char1 = credentials['password'].substr(indices[0]-1, 1);
-            const char2 = credentials['password'].substr(indices[1]-1, 1);
-            
-            await u.fillFields(this.page, {
-                'input[name="passcode"]': credentials["passcode"],
-            });
-            
-            await u.wait(this.page, 'div.dropdown.firstMemorableCharacter div');
-            await this.page.focus('div.dropdown.firstMemorableCharacter');
-            await u.fillFields(this.page, {
-                'div.dropdown.firstMemorableCharacter': char1,
-            });
-
-            await u.wait(this.page, 'div.dropdown.secondMemorableCharacter div');
-            await this.page.focus('div.dropdown.secondMemorableCharacter');
-            await u.fillFields(this.page, {
-                'div.dropdown.secondMemorableCharacter': char2,
-            });
-            
-            // arbitrary delay is not ideal, but have been unable to identify a suitable wait candidate for state update
-            await this.page.waitForTimeout(1000);
-            await u.click(this.page, 'button[title="Log in to Online Banking"]');
-            await this.ensureLoggedIn();
-        }
+    for (const [idx, selector] of char_selectors.entries()) {
+      await u.wait(this.page, selector);
+      let input = await this.page.$(selector)
+      let index_label = await this.page.evaluate(el => el.textContent, input)
+      let charindex = index_label.match(digits);
+      const passcode_char = credentials['password'].substr(charindex-1, 1);
+      let field_selector = "input[type='text']#memorableCharacters-input-" + (idx+1).toString();
+      await u.fillField(this.page, field_selector, passcode_char)
     }
+
+    // blur the memorable char input (by re-focusing passcode input). This is necessary to allow onblur validation to take place
+    await this.page.focus("input#passcode");
+
+    let button_selector = 'button#submitAuthentication';
+    await u.wait(this.page, button_selector);
+    await u.click(this.page, button_selector);
+
+    // bypass occasional security page, if presented
+    await this.loginPasscode_interim_page(credentials);
+    await this.ensureLoggedIn();
+  }
+
+  async loginPasscode_interim_page(credentials) {
+    // check for interim security page
+    try {
+      await this.page.waitForSelector("span#label-scaCardLastDigits")
+    } catch (error) {
+      return;
+    }
+
+    await u.fillField(this.page, "input#scaCardLastDigits", credentials['card_digits'])
+    await u.fillField(this.page, "input#scaSecurityCode", credentials['card_cvv'])
+    await u.click(this.page, "button#saveScaAuthentication")
   }
 
   async accounts() {
