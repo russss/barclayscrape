@@ -10,6 +10,7 @@ const prompt = require('syncprompt');
 
 const pkg = require('./package.json');
 const session = require('./session.js');
+const services = require('./services.js');
 
 const conf = new Configstore(pkg.name);
 
@@ -43,9 +44,35 @@ program
     }
   });
 
-program
+  program
+  .command('get_ofx_combined [out_path]')
+  .description('Fetch a combined .ofx file containing all accounts into out_path directory')
+  .action(async (out_path, options) => {
+ 		// if out_path is undefined, default to cwd
+		if (typeof(out_path) == "undefined") {
+		  out_path = '.';
+		}
+
+    var sess;
+    try {
+      sess = await auth();
+      try {
+        var serv = new services(sess);
+        await serv.get_ofx_combined(out_path)
+      } catch (err) {
+        console.error(err);
+      }
+    } catch (err) {
+      console.error(err);
+      return;
+    } finally {
+      await sess.close();
+    }
+  });
+  
+  program
   .command('get_ofx <out_path>')
-  .description('Fetch .ofx files for all accounts into out_path')
+  .description('Fetch individual ofx files for each account, into out_path directory')
   .action(async (out_path, options) => {
     var sess;
     try {
