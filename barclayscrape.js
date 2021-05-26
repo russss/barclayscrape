@@ -23,7 +23,7 @@ program
 
 program
   .command('list')
-  .option('--json', 'Output account list as a JSON object')
+  .option('-j, --json', 'Output account list as a JSON object')
   .description('List all available accounts')
   .action(async options => {
     var sess;
