@@ -2,11 +2,13 @@ const u = require('./utils.js');
 
 // Class for dealing with the Barclays account page.
 module.exports = class Account {
-  constructor(session, href, number) {
+  constructor(session, href, number, label, balance) {
     this.session = session;
     this.page = session.page;
-    this.number = number;
     this.href = href;
+    this.number = number;
+    this.label = label;
+    this.balance = balance;
   }
 
   async select() {

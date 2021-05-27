@@ -24,6 +24,7 @@ program
 
 program
   .command('list')
+  .option('-j, --json', 'Output account list as a JSON object')
   .description('List all available accounts')
   .action(async options => {
     var sess;
@@ -36,7 +37,13 @@ program
 
     try {
       const accounts = await sess.accounts();
-      console.table(accounts.map(acc => [acc.number, exportLabel(acc)]));
+      if (options.json) {
+        let account_list = accounts.map( function(acc) { return {'number': acc.number, 'alias': exportLabel(acc), 'name': acc.label, 'balance': acc.balance} });
+        console.log(JSON.stringify(account_list));
+      }
+      else {
+        console.table(accounts.map(acc => [acc.number, exportLabel(acc), acc.label, acc.balance]));
+      }
     } catch (err) {
       console.error(err);
     } finally {

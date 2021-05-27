@@ -149,13 +149,15 @@ class Session {
       return accounts.map(acc => {
         return [
           acc.querySelector('.my-account-link').getAttribute('href'),
-          acc.querySelector('.o-account').getAttribute('id').replace(/[^0-9]/g, '')
+          acc.querySelector('.o-account').getAttribute('id').replace(/[^0-9]/g, ''),
+          acc.querySelector('.my-account-link').textContent.trim(),
+          acc.querySelector('.o-account__balance-head') !== null ? acc.querySelector('.o-account__balance-head').textContent.trim().replace(/[£$€]/g, '') : ''
         ]
       });
     });
     let res = [];
     accData.forEach(a => {
-      if (a[1] == '') {
+      if ((a[1] == '') || (a[3] == '')) {
         return;
       }
 
@@ -163,7 +165,9 @@ class Session {
         new Account(
           this,
           a[0],
-          a[1]
+          a[1],
+          a[2],
+          a[3]
         ),
       );
     });
