@@ -35,7 +35,8 @@ Options:
   -h, --help          output usage information
 
 Commands:
-  list                List all available accounts
+  list [options]      List all available accounts
+    -j, --json               Output account list in JSON format
   get_ofx <out_path>  Fetch .ofx files for all accounts into out_path
   csv [options]       Fetch .csv files for accounts
     -p, --path <path>        Export path. defaults to ./export
