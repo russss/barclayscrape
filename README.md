@@ -38,6 +38,7 @@ Commands:
   list [options]      List all available accounts
     -j, --json               Output account list in JSON format
   get_ofx <out_path>  Fetch .ofx files for all accounts into out_path
+  get_ofx_combined <out_path> Download a single .ofx file containing all account activity, into out_path
   csv [options]       Fetch .csv files for accounts
     -p, --path <path>        Export path. defaults to ./export
     -f, --from <dd/mm/yyyy>  From date
