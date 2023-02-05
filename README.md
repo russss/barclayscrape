@@ -1,5 +1,12 @@
+> :warning: **This repository is archived.**
+>
+> I no longer use this software and the website it scrapes frequently changes, so this code is likely useless by now.
+>
+> [@carpii has a fork](https://github.com/carpii/barclayscrape) which might still be maintained.
+
 Barclayscrape v3.0
 ==================
+
 Code to programmatically manipulate Barclays online banking using
 [Puppeteer](https://github.com/GoogleChrome/puppeteer).
 
